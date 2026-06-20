@@ -177,6 +177,33 @@
     .dq { min-width: 150px; max-width: 150px; font-size: 0.78rem; }
     .hud__dept { display: none; }
   }
+
+  /* ── Smart Prompt Builder ── */
+  .builder{margin-top:0;border:1px solid rgba(26,107,138,.25);border-top:none}
+  .builder-inner{padding:14px 16px;background:rgba(26,107,138,.03)}
+  .builder-toggle-btn{background:var(--claude);color:#fff;border:none;padding:6px 14px;font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap;flex-shrink:0}
+  .builder-toggle-btn:hover{background:var(--baroque)}
+  .builder-cta{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0 2px;flex-wrap:wrap}
+  .builder-cta-text{font-size:.75rem;color:var(--allegretto);line-height:1.4}
+  .field-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .field-group{flex:1;min-width:160px}
+  .field-group.full{flex:100%}
+  .field-group label{display:block;font-size:.65rem;font-weight:600;color:var(--ink-soft);margin-bottom:4px;text-transform:uppercase;letter-spacing:.1em}
+  .field-hint{font-weight:400;font-size:.6rem;color:var(--allegretto);text-transform:none;letter-spacing:0}
+  .field-group input[type=text],.field-group select,.field-group textarea.fta{width:100%;padding:6px 9px;border:1px solid var(--rule);background:#fff;font-family:var(--ff-body);font-size:.82rem;color:var(--bassoon)}
+  .field-group input:focus,.field-group select:focus,.field-group textarea.fta:focus{border-color:var(--claude);outline:none}
+  .sf-box{border:1px solid rgba(26,107,138,.2);padding:10px 12px;margin-bottom:10px;background:rgba(26,107,138,.05)}
+  .sf-box-lbl{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--claude);margin-bottom:8px}
+  .deploy-box{margin-bottom:10px}
+  .deploy-box>label{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);display:block;margin-bottom:6px}
+  .deploy-opts{display:flex;gap:16px;flex-wrap:wrap}
+  .deploy-opts label{font-weight:400;font-size:.82rem;text-transform:none;letter-spacing:0;display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--bassoon)}
+  .prompt-wrap{border-top:1px solid rgba(26,107,138,.15)}
+  .prompt-lbl-bar{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#4ab3d9;background:var(--bassoon);padding:7px 14px;display:flex;align-items:center;gap:8px}
+  .prompt-lbl-bar::before{content:'▶';font-size:.6rem}
+  .prompt-out{width:100%;padding:10px 14px;background:var(--bassoon);color:#d6cfc4;font-family:'Cascadia Code','Consolas',monospace;font-size:.74rem;line-height:1.6;border:none;resize:vertical;min-height:200px;display:block}
+  .copy-btn{background:var(--claude);color:#fff;border:none;padding:8px 22px;font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;margin:8px 14px 12px auto;display:block}
+  .copy-btn:hover{background:var(--baroque)}
 </style>
 </head>
 <body>
@@ -255,17 +282,92 @@
     <h3>Can Claude Be Used?</h3>
     <span class="claude-status c-yes">✅ Yes — Claude can fully execute this approach</span>
     <p class="claude-desc">You describe what you need in plain English. Claude inspects the report structure, identifies the exact object, writes the VBScript, and runs it using the COM server already installed on your machine. No manual scripting required.</p>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — rename a column header</div>
-      <div class="claude-prompt-text">In the report at C:\Crystal Reports Dev\Reports\Active\SBRR_MARKET_UPDATE.rpt, rename the column header labeled "Remarks" to "Notes" in PageHeaderSection1. Use COM automation (CrystalDesignRunTime). Save to the local working copy only — do not touch the network file.</div>
+    <div class="builder-cta">
+      <span class="builder-cta-text">Fill in your details below — Claude gets full context with no follow-up questions needed.</span>
+      <button class="builder-toggle-btn" id="bt-a1" onclick="toggleBuilder('a1')">Build a prompt ▼</button>
     </div>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — change the SQL query</div>
-      <div class="claude-prompt-text">Update the SQL in SBRR_MARKET_UPDATE.rpt to add the MARKET column to the SELECT list. Show me the current SQL first before changing it. Use COM automation.</div>
-    </div>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — reposition a column</div>
-      <div class="claude-prompt-text">In SBRR_MARKET_UPDATE.rpt, move the "Cruise Code" column header 200 twips to the right using COM automation. Keep the same font and size.</div>
+    <div class="builder" id="bb-a1" style="display:none">
+      <div class="builder-inner">
+        <div class="field-row">
+          <div class="field-group"><label>Action <span class="field-hint">— what do you want Claude to do?</span></label>
+            <select id="a1-action" onchange="updateAction('a1')">
+              <option value="rename">Rename a column label</option>
+              <option value="reposition">Reposition / move a column</option>
+              <option value="sql">Modify the SQL query</option>
+              <option value="format">Change font or formatting</option>
+              <option value="audit">Audit report structure (list everything)</option>
+            </select>
+          </div>
+        </div>
+        <div data-for="a1" data-field="f-path" class="field-row" style="display:none">
+          <div class="field-group full"><label>Report path <span class="field-hint">full path to the .rpt file</span></label>
+            <input id="a1-path" type="text" placeholder="C:\Crystal Reports Dev\Reports\Active\SBRR_MARKET_UPDATE.rpt" oninput="regen('a1')">
+          </div>
+        </div>
+        <div data-for="a1" data-field="f-section" class="field-row" style="display:none">
+          <div class="field-group"><label>Section <span class="field-hint">which section to look in</span></label>
+            <select id="a1-section" onchange="regen('a1')">
+              <option value="PageHeaderSection1">PageHeaderSection1</option>
+              <option value="DetailSection1">DetailSection1</option>
+              <option value="ReportHeaderSection1">ReportHeaderSection1</option>
+              <option value="ReportFooterSection1">ReportFooterSection1</option>
+              <option value="PageFooterSection1">PageFooterSection1</option>
+            </select>
+          </div>
+        </div>
+        <div data-for="a1" data-field="f-old" class="field-row" style="display:none">
+          <div class="field-group"><label>Current label text <span class="field-hint">exact text to find (case-insensitive)</span></label>
+            <input id="a1-old" type="text" placeholder="e.g. Remarks" oninput="regen('a1')">
+          </div>
+        </div>
+        <div data-for="a1" data-field="f-new" class="field-row" style="display:none">
+          <div class="field-group"><label>New label text <span class="field-hint">what it should say after</span></label>
+            <input id="a1-new" type="text" placeholder="e.g. Notes" oninput="regen('a1')">
+          </div>
+        </div>
+        <div data-for="a1" data-field="f-posafter" class="field-row" style="display:none">
+          <div class="field-group"><label>Place after <span class="field-hint">name of the column to its left</span></label>
+            <input id="a1-posafter" type="text" placeholder="e.g. Cruise Code" oninput="regen('a1')">
+          </div>
+        </div>
+        <div data-for="a1" data-field="f-font" class="field-row" style="display:none">
+          <div class="field-group"><label>Font <span class="field-hint">leave blank to keep existing font</span></label>
+            <input id="a1-font" type="text" placeholder="e.g. Arial 8pt bold" oninput="regen('a1')">
+          </div>
+        </div>
+        <div data-for="a1" data-field="f-sf" style="display:none">
+          <div class="sf-box"><div class="sf-box-lbl">Snowflake Data Source</div>
+            <div class="field-row">
+              <div class="field-group"><label>Server <span class="field-hint">blank = default</span></label><input id="a1-sfsrv" type="text" placeholder="amawaterways.snowflakecomputing.com" oninput="regen('a1')"></div>
+              <div class="field-group"><label>Warehouse</label><input id="a1-sfwh" type="text" placeholder="AMA_WAREHOUSE" oninput="regen('a1')"></div>
+            </div>
+            <div class="field-row">
+              <div class="field-group"><label>Database</label><input id="a1-sfdb" type="text" placeholder="AMA_DB" oninput="regen('a1')"></div>
+              <div class="field-group"><label>Schema <span class="field-hint">optional</span></label><input id="a1-sfsc" type="text" placeholder="e.g. REPORTING" oninput="regen('a1')"></div>
+            </div>
+            <div class="field-row">
+              <div class="field-group"><label>Table / View <span class="field-hint">optional</span></label><input id="a1-sftb" type="text" placeholder="e.g. BOOKINGS_REVENUE_VIEW" oninput="regen('a1')"></div>
+              <div class="field-group"><label>Column <span class="field-hint">to add to SQL</span></label><input id="a1-sfcol" type="text" placeholder="e.g. MARKET" oninput="regen('a1')"></div>
+            </div>
+          </div>
+        </div>
+        <div data-for="a1" data-field="f-sqladd" class="field-row" style="display:none">
+          <div class="field-group"><label>Add to SELECT <span class="field-hint">column name(s)</span></label><input id="a1-sqladd" type="text" placeholder="MARKET" oninput="regen('a1')"></div>
+          <div class="field-group"><label>Add WHERE <span class="field-hint">optional — leave blank if none</span></label><input id="a1-sqlwhere" type="text" placeholder="e.g. YEAR = 2025" oninput="regen('a1')"></div>
+        </div>
+        <div data-for="a1" data-field="f-deploy" class="deploy-box" style="display:none">
+          <label>Save / Deploy</label>
+          <div class="deploy-opts">
+            <label><input type="radio" name="a1-deploy" value="local" checked onchange="regen('a1')"> Save LOCAL copy only — do NOT touch the network file</label>
+            <label><input type="radio" name="a1-deploy" value="ask" onchange="regen('a1')"> Ask my approval before writing to network</label>
+          </div>
+        </div>
+      </div>
+      <div class="prompt-wrap">
+        <div class="prompt-lbl-bar">Generated Claude Prompt — copy and paste into Claude</div>
+        <textarea class="prompt-out" id="pout-a1" readonly></textarea>
+        <button class="copy-btn" id="cbtn-a1" onclick="copyToClipboard('a1')">Copy prompt</button>
+      </div>
     </div>
     <div class="claude-result"><strong>What Claude does:</strong> Reads the report via COM → finds the section and object → inspects the current value → makes the change → saves the local file → confirms before/after. Claude will not touch the network file unless you explicitly say so.</div>
   </div>
@@ -332,21 +434,105 @@ report.Save : WScript.Echo "Done."</pre>
     <h3>Can Claude Be Used?</h3>
     <span class="claude-status c-yes">✅ Yes — Claude can fully execute this approach</span>
     <p class="claude-desc">Once the .NET runtime is installed, tell Claude what you need added, renamed, or modified. Claude writes and runs the PowerShell script against the CrystalDecisions API — including creating brand-new objects that Approach 1 cannot do. Claude handles all the technical detail; you just describe the business need.</p>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — add a new column header</div>
-      <div class="claude-prompt-text">Using the CrystalDecisions .NET API, add a new text label called "Market" to PageHeaderSection1 of C:\Crystal Reports Dev\Reports\Active\SBRR_MARKET_UPDATE.rpt. Position it immediately after the "Cruise Code" header. Match the same font (Arial 8pt bold) and height as the other column headers. Save to the local file only.</div>
+    <div class="builder-cta">
+      <span class="builder-cta-text">Fill in your details — Claude gets full context including exact coordinates, font specs, and Snowflake source.</span>
+      <button class="builder-toggle-btn" id="bt-a2" onclick="toggleBuilder('a2')">Build a prompt ▼</button>
     </div>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — add a new data field column</div>
-      <div class="claude-prompt-text">In SBRR_MARKET_UPDATE.rpt, add a database field object for the MARKET column from Snowflake into DetailSection1. Place it directly under the "Market" header added to PageHeaderSection1. Match the width and height of the adjacent fields. Use the CrystalDecisions .NET API.</div>
-    </div>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — bulk rename across multiple reports</div>
-      <div class="claude-prompt-text">Using the CrystalDecisions .NET API, loop through all .rpt files in C:\Crystal Reports Dev\Reports\Active\ and rename any column header labeled "Remarks" to "Notes". List which files were changed and which had no "Remarks" label.</div>
-    </div>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — export to PDF</div>
-      <div class="claude-prompt-text">Open SBRR_MARKET_UPDATE.rpt using the CrystalDecisions .NET API, set the ODBC login (DSN: AMA_SNOWFLAKE_ODBC_CONNECTOR), run the report, and export to PDF at C:\Reports\Output\SBRR_today.pdf.</div>
+    <div class="builder" id="bb-a2" style="display:none">
+      <div class="builder-inner">
+        <div class="field-row">
+          <div class="field-group"><label>Action <span class="field-hint">— what do you want Claude to do?</span></label>
+            <select id="a2-action" onchange="updateAction('a2')">
+              <option value="add-header">Add a new column header (text label)</option>
+              <option value="add-field">Add a new data field column</option>
+              <option value="rename">Rename an existing label</option>
+              <option value="sql">Change the SQL query</option>
+              <option value="export">Export report to PDF / Excel</option>
+              <option value="bulk-rename">Bulk rename across all reports in folder</option>
+            </select>
+          </div>
+        </div>
+        <div data-for="a2" data-field="f-path" class="field-row" style="display:none">
+          <div class="field-group full"><label>Report path <span class="field-hint">full path to the .rpt file</span></label>
+            <input id="a2-path" type="text" placeholder="C:\Crystal Reports Dev\Reports\Active\SBRR_MARKET_UPDATE.rpt" oninput="regen('a2')">
+          </div>
+        </div>
+        <div data-for="a2" data-field="f-folder" class="field-row" style="display:none">
+          <div class="field-group full"><label>Folder path <span class="field-hint">folder containing all .rpt files</span></label>
+            <input id="a2-folder" type="text" placeholder="C:\Crystal Reports Dev\Reports\Active\" oninput="regen('a2')">
+          </div>
+        </div>
+        <div data-for="a2" data-field="f-section" class="field-row" style="display:none">
+          <div class="field-group"><label>Section</label>
+            <select id="a2-section" onchange="regen('a2')">
+              <option value="PageHeaderSection1">PageHeaderSection1</option>
+              <option value="DetailSection1">DetailSection1</option>
+              <option value="ReportHeaderSection1">ReportHeaderSection1</option>
+              <option value="ReportFooterSection1">ReportFooterSection1</option>
+              <option value="PageFooterSection1">PageFooterSection1</option>
+            </select>
+          </div>
+        </div>
+        <div data-for="a2" data-field="f-old" class="field-row" style="display:none">
+          <div class="field-group"><label>Current label text</label><input id="a2-old" type="text" placeholder="e.g. Remarks" oninput="regen('a2')"></div>
+        </div>
+        <div data-for="a2" data-field="f-new" class="field-row" style="display:none">
+          <div class="field-group"><label>New label text</label><input id="a2-new" type="text" placeholder="e.g. Market" oninput="regen('a2')"></div>
+        </div>
+        <div data-for="a2" data-field="f-posafter" class="field-row" style="display:none">
+          <div class="field-group"><label>Place after <span class="field-hint">existing column to the left</span></label>
+            <input id="a2-posafter" type="text" placeholder="e.g. Cruise Code" oninput="regen('a2')">
+          </div>
+        </div>
+        <div data-for="a2" data-field="f-font" class="field-row" style="display:none">
+          <div class="field-group"><label>Font <span class="field-hint">match adjacent columns</span></label>
+            <input id="a2-font" type="text" placeholder="Arial 8pt bold" oninput="regen('a2')">
+          </div>
+        </div>
+        <div data-for="a2" data-field="f-exportfmt" class="field-row" style="display:none">
+          <div class="field-group"><label>Export format</label>
+            <select id="a2-exportfmt" onchange="regen('a2')">
+              <option value="PDF">PDF</option><option value="Excel">Excel (XLS)</option>
+              <option value="CSV">CSV</option><option value="Word">Word (RTF)</option>
+            </select>
+          </div>
+          <div class="field-group"><label>Export path <span class="field-hint">output file path</span></label>
+            <input id="a2-exportpath" type="text" placeholder="C:\Reports\Output\SBRR_today.pdf" oninput="regen('a2')">
+          </div>
+        </div>
+        <div data-for="a2" data-field="f-sf" style="display:none">
+          <div class="sf-box"><div class="sf-box-lbl">Snowflake Data Source</div>
+            <div class="field-row">
+              <div class="field-group"><label>Server</label><input id="a2-sfsrv" type="text" placeholder="amawaterways.snowflakecomputing.com" oninput="regen('a2')"></div>
+              <div class="field-group"><label>Warehouse</label><input id="a2-sfwh" type="text" placeholder="AMA_WAREHOUSE" oninput="regen('a2')"></div>
+            </div>
+            <div class="field-row">
+              <div class="field-group"><label>Database</label><input id="a2-sfdb" type="text" placeholder="AMA_DB" oninput="regen('a2')"></div>
+              <div class="field-group"><label>Schema <span class="field-hint">optional</span></label><input id="a2-sfsc" type="text" placeholder="e.g. REPORTING" oninput="regen('a2')"></div>
+            </div>
+            <div class="field-row">
+              <div class="field-group"><label>Table / View <span class="field-hint">optional</span></label><input id="a2-sftb" type="text" placeholder="e.g. BOOKINGS_REVENUE_VIEW" oninput="regen('a2')"></div>
+              <div class="field-group"><label>Column <span class="field-hint">Snowflake column name</span></label><input id="a2-sfcol" type="text" placeholder="MARKET" oninput="regen('a2')"></div>
+            </div>
+          </div>
+        </div>
+        <div data-for="a2" data-field="f-sqladd" class="field-row" style="display:none">
+          <div class="field-group"><label>Add to SELECT</label><input id="a2-sqladd" type="text" placeholder="MARKET" oninput="regen('a2')"></div>
+          <div class="field-group"><label>Add WHERE <span class="field-hint">optional</span></label><input id="a2-sqlwhere" type="text" placeholder="e.g. YEAR = 2025" oninput="regen('a2')"></div>
+        </div>
+        <div data-for="a2" data-field="f-deploy" class="deploy-box" style="display:none">
+          <label>Save / Deploy</label>
+          <div class="deploy-opts">
+            <label><input type="radio" name="a2-deploy" value="local" checked onchange="regen('a2')"> Save LOCAL copy only — do NOT touch the network file</label>
+            <label><input type="radio" name="a2-deploy" value="ask" onchange="regen('a2')"> Ask my approval before writing to network</label>
+          </div>
+        </div>
+      </div>
+      <div class="prompt-wrap">
+        <div class="prompt-lbl-bar">Generated Claude Prompt — copy and paste into Claude</div>
+        <textarea class="prompt-out" id="pout-a2" readonly></textarea>
+        <button class="copy-btn" id="cbtn-a2" onclick="copyToClipboard('a2')">Copy prompt</button>
+      </div>
     </div>
     <div class="claude-result"><strong>What Claude does:</strong> Loads the CrystalDecisions DLL → opens the report → inspects the section structure → calculates coordinates from existing object positions → generates and runs PowerShell → confirms what was added with exact positions.</div>
   </div>
@@ -408,13 +594,41 @@ $rpt.SaveAs("C:\Reports\SBRR_MARKET_UPDATE.rpt") ; $rpt.Close()</pre>
     <h3>Can Claude Be Used?</h3>
     <span class="claude-status c-partial">⚠️ Partial — Claude assists but cannot execute GUI actions</span>
     <p class="claude-desc">Claude cannot control the mouse, record clicks, or interact with the Crystal Reports Designer GUI. Power Automate Desktop requires a human to record the initial flow by performing the actions on screen. However, Claude can design the entire flow — writing out the exact steps to record, variables to create, and logic to add — so you follow Claude's instructions while recording.</p>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — design a flow (Claude plans, you record)</div>
-      <div class="claude-prompt-text">Help me design a Power Automate Desktop flow to insert a new text label "Market" into Crystal Reports PageHeaderSection1. Give me the exact step-by-step mouse clicks and keyboard actions I need to record, in the correct order, including where to click and what to type.</div>
+    <div class="builder-cta">
+      <span class="builder-cta-text">Describe what you want to automate — Claude will write a step-by-step recording guide.</span>
+      <button class="builder-toggle-btn" id="bt-a3" onclick="toggleBuilder('a3')">Build a prompt ▼</button>
     </div>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — troubleshoot a broken flow</div>
-      <div class="claude-prompt-text">My Power Automate Desktop flow for Crystal Reports stopped working after I changed screen resolution from 1920x1080 to 1440x900. The flow clicks on the wrong place now. What are the best practices to make the flow resolution-independent?</div>
+    <div class="builder" id="bb-a3" style="display:none">
+      <div class="builder-inner">
+        <div class="field-row">
+          <div class="field-group"><label>Action</label>
+            <select id="a3-action" onchange="updateAction('a3')">
+              <option value="design">Design a new flow (Claude plans, you record)</option>
+              <option value="troubleshoot">Troubleshoot a broken flow</option>
+            </select>
+          </div>
+        </div>
+        <div data-for="a3" data-field="f-actiondesc" class="field-row" style="display:none">
+          <div class="field-group full"><label>What to automate <span class="field-hint">describe the action in plain English</span></label>
+            <input id="a3-actiondesc" type="text" placeholder='e.g. Insert a "Market" text label in Crystal Reports PageHeaderSection1' oninput="regen('a3')">
+          </div>
+        </div>
+        <div data-for="a3" data-field="f-context" class="field-row" style="display:none">
+          <div class="field-group full"><label>Additional context <span class="field-hint">screen resolution, Crystal Reports version, any constraints</span></label>
+            <input id="a3-context" type="text" placeholder="e.g. Screen is 1920x1080, Crystal Reports 2016 Designer" oninput="regen('a3')">
+          </div>
+        </div>
+        <div data-for="a3" data-field="f-problemdesc" class="field-row" style="display:none">
+          <div class="field-group full"><label>Describe what broke <span class="field-hint">what the flow does vs what it should do</span></label>
+            <input id="a3-problemdesc" type="text" placeholder="e.g. After changing resolution from 1920x1080 to 1440x900, the click lands in the wrong place" oninput="regen('a3')">
+          </div>
+        </div>
+      </div>
+      <div class="prompt-wrap">
+        <div class="prompt-lbl-bar">Generated Claude Prompt — copy and paste into Claude</div>
+        <textarea class="prompt-out" id="pout-a3" readonly></textarea>
+        <button class="copy-btn" id="cbtn-a3" onclick="copyToClipboard('a3')">Copy prompt</button>
+      </div>
     </div>
     <div class="claude-result"><strong>What Claude does:</strong> Designs the flow steps, writes documentation, explains the logic, troubleshoots failures. <strong>What Claude cannot do:</strong> Record the flow, click the mouse, or interact with the Crystal Reports GUI. A person must perform the recording step.</div>
   </div>
@@ -466,9 +680,50 @@ $rpt.SaveAs("C:\Reports\SBRR_MARKET_UPDATE.rpt") ; $rpt.Close()</pre>
     <h3>Can Claude Be Used?</h3>
     <span class="claude-status c-partial">⚠️ Partial — Claude writes API scripts but the API cannot change report layout</span>
     <p class="claude-desc">Claude can write the complete PowerShell or HTTP scripts to authenticate, schedule, export, and distribute via the BOE REST API. However, the BOE API itself has no method to modify report layout — adding columns, renaming labels, or changing SQL is not possible through this API regardless of what Claude writes.</p>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — schedule and export via BOE API</div>
-      <div class="claude-prompt-text">Write a PowerShell script to use the SAP BusinessObjects REST API to authenticate to BOE at http://boe-server:6405, find the report named "SBRR Booking Revenue Report", schedule it to run every weekday at 6:00 AM, and export the PDF output to \\internal\reports\Output\SBRR_daily.pdf.</div>
+    <div class="builder-cta">
+      <span class="builder-cta-text">Enter your BOE server details — Claude writes the complete PowerShell/REST script.</span>
+      <button class="builder-toggle-btn" id="bt-a4" onclick="toggleBuilder('a4')">Build a prompt ▼</button>
+    </div>
+    <div class="builder" id="bb-a4" style="display:none">
+      <div class="builder-inner">
+        <div class="field-row">
+          <div class="field-group"><label>Action</label>
+            <select id="a4-action" onchange="updateAction('a4')">
+              <option value="schedule">Schedule a report run</option>
+              <option value="export">Export report output on demand</option>
+              <option value="refresh">Trigger a data refresh</option>
+            </select>
+          </div>
+        </div>
+        <div data-for="a4" data-field="f-boeserver" class="field-row" style="display:none">
+          <div class="field-group"><label>BOE Server URL <span class="field-hint">include port</span></label>
+            <input id="a4-boeserver" type="text" placeholder="http://boe-server:6405" oninput="regen('a4')">
+          </div>
+          <div class="field-group"><label>Report name in BOE</label>
+            <input id="a4-reportname" type="text" placeholder="SBRR Booking Revenue Report" oninput="regen('a4')">
+          </div>
+        </div>
+        <div data-for="a4" data-field="f-schedtime" class="field-row" style="display:none">
+          <div class="field-group"><label>Schedule <span class="field-hint">when should it run?</span></label>
+            <input id="a4-schedtime" type="text" placeholder="Every weekday at 06:00 AM" oninput="regen('a4')">
+          </div>
+        </div>
+        <div data-for="a4" data-field="f-exportfmt" class="field-row" style="display:none">
+          <div class="field-group"><label>Export format</label>
+            <select id="a4-exportfmt" onchange="regen('a4')">
+              <option value="PDF">PDF</option><option value="Excel">Excel</option><option value="CSV">CSV</option>
+            </select>
+          </div>
+          <div class="field-group"><label>Export path</label>
+            <input id="a4-exportpath" type="text" placeholder="\\internal\reports\Output\SBRR_daily.pdf" oninput="regen('a4')">
+          </div>
+        </div>
+      </div>
+      <div class="prompt-wrap">
+        <div class="prompt-lbl-bar">Generated Claude Prompt — copy and paste into Claude</div>
+        <textarea class="prompt-out" id="pout-a4" readonly></textarea>
+        <button class="copy-btn" id="cbtn-a4" onclick="copyToClipboard('a4')">Copy prompt</button>
+      </div>
     </div>
     <div class="claude-result"><strong>What Claude does:</strong> Writes complete REST API scripts for scheduling and export. <strong>What Claude cannot do via this approach:</strong> Add columns, rename labels, or change SQL — the BOE API has no endpoints for report design changes. Use Approaches 1 or 2 for those.</div>
   </div>
@@ -519,9 +774,30 @@ Invoke-RestMethod `
     <h3>Can Claude Be Used?</h3>
     <span class="claude-status c-no">❌ Claude cannot add or modify columns via this approach</span>
     <p class="claude-desc">Claude can write Python to <em>read</em> .rpt binary data using the <code>olefile</code> library (useful for auditing without Crystal Reports installed). However, no Python library exists to reliably <em>write</em> to the .rpt binary format — attempting to do so risks permanently corrupting the report file. Claude cannot use this approach to add columns, rename labels, or change SQL. Use Approaches 1 or 2 for modifications.</p>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — read-only audit (only thing Claude CAN do here)</div>
-      <div class="claude-prompt-text">Write a Python script using the olefile library to open C:\Crystal Reports Dev\Reports\Active\SBRR_MARKET_UPDATE.rpt and list all internal OLE2 streams, then extract any readable text strings (object labels, SQL fragments). Also show me how to install Python and the olefile library on Windows.</div>
+    <div class="builder-cta">
+      <span class="builder-cta-text">Provide the report path — Claude writes a Python script to extract all readable metadata from the binary.</span>
+      <button class="builder-toggle-btn" id="bt-a5" onclick="toggleBuilder('a5')">Build a prompt ▼</button>
+    </div>
+    <div class="builder" id="bb-a5" style="display:none">
+      <div class="builder-inner">
+        <div class="field-row">
+          <div class="field-group"><label>Action</label>
+            <select id="a5-action" onchange="updateAction('a5')">
+              <option value="audit">Read-only binary audit (extract metadata)</option>
+            </select>
+          </div>
+        </div>
+        <div data-for="a5" data-field="f-path" class="field-row" style="display:none">
+          <div class="field-group full"><label>Report path <span class="field-hint">full path to the .rpt file</span></label>
+            <input id="a5-path" type="text" placeholder="C:\Crystal Reports Dev\Reports\Active\SBRR_MARKET_UPDATE.rpt" oninput="regen('a5')">
+          </div>
+        </div>
+      </div>
+      <div class="prompt-wrap">
+        <div class="prompt-lbl-bar">Generated Claude Prompt — copy and paste into Claude</div>
+        <textarea class="prompt-out" id="pout-a5" readonly></textarea>
+        <button class="copy-btn" id="cbtn-a5" onclick="copyToClipboard('a5')">Copy prompt</button>
+      </div>
     </div>
     <div class="claude-result"><strong>What Claude does:</strong> Writes the Python read-only parsing script. <strong>What Claude cannot do via this approach:</strong> Add columns, rename labels, or change SQL — no write library exists for .rpt binary format. For modifications, use Approach 1 or 2.</div>
   </div>
@@ -573,13 +849,73 @@ with olefile.OleFileIO("MyReport.rpt") as ole:
     <h3>Can Claude Be Used?</h3>
     <span class="claude-status c-yes">✅ Yes — Claude can fully modify SSRS RDL files (easiest AI integration)</span>
     <p class="claude-desc">Because SSRS reports are plain XML (.rdl files), Claude reads, modifies, and writes them directly — no special software or COM/DLL needed. Adding a column, renaming a label, changing SQL — all pure XML text. This is the approach where Claude has the fewest limitations. After migration, every report change request becomes a simple prompt.</p>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — add a column to an RDL file</div>
-      <div class="claude-prompt-text">Open the SSRS report at C:\Reports\SSRS\SBRR.rdl and add a "Market" column after "CruiseCode". The header should be bold. The data cell should bind to the MARKET field from the dataset. Match the width of the CruiseCode column. Save the file.</div>
+    <div class="builder-cta">
+      <span class="builder-cta-text">Fill in your RDL and Snowflake details — Claude edits the XML directly, no software needed.</span>
+      <button class="builder-toggle-btn" id="bt-a6" onclick="toggleBuilder('a6')">Build a prompt ▼</button>
     </div>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — batch rename across all RDL files</div>
-      <div class="claude-prompt-text">Loop through all .rdl files in C:\Reports\SSRS\ and rename any column header text "Remarks" to "Notes". List which files were changed.</div>
+    <div class="builder" id="bb-a6" style="display:none">
+      <div class="builder-inner">
+        <div class="field-row">
+          <div class="field-group"><label>Action</label>
+            <select id="a6-action" onchange="updateAction('a6')">
+              <option value="add-col">Add a new column</option>
+              <option value="rename">Rename a label</option>
+              <option value="sql">Change the SQL query</option>
+              <option value="batch-rename">Batch rename across all RDL files</option>
+            </select>
+          </div>
+        </div>
+        <div data-for="a6" data-field="f-rdlpath" class="field-row" style="display:none">
+          <div class="field-group full"><label>RDL file path</label>
+            <input id="a6-rdlpath" type="text" placeholder="C:\Reports\SSRS\SBRR.rdl" oninput="regen('a6')">
+          </div>
+        </div>
+        <div data-for="a6" data-field="f-folder" class="field-row" style="display:none">
+          <div class="field-group full"><label>Folder path <span class="field-hint">folder containing all .rdl files</span></label>
+            <input id="a6-folder" type="text" placeholder="C:\Reports\SSRS\" oninput="regen('a6')">
+          </div>
+        </div>
+        <div data-for="a6" data-field="f-old" class="field-row" style="display:none">
+          <div class="field-group"><label>Current label text</label><input id="a6-old" type="text" placeholder="e.g. Remarks" oninput="regen('a6')"></div>
+        </div>
+        <div data-for="a6" data-field="f-new" class="field-row" style="display:none">
+          <div class="field-group"><label>New label text</label><input id="a6-new" type="text" placeholder="e.g. Notes" oninput="regen('a6')"></div>
+        </div>
+        <div data-for="a6" data-field="f-posafter" class="field-row" style="display:none">
+          <div class="field-group"><label>Place after <span class="field-hint">existing column name</span></label>
+            <input id="a6-posafter" type="text" placeholder="e.g. CruiseCode" oninput="regen('a6')">
+          </div>
+        </div>
+        <div data-for="a6" data-field="f-font" class="field-row" style="display:none">
+          <div class="field-group"><label>Font</label><input id="a6-font" type="text" placeholder="Arial 8pt bold" oninput="regen('a6')"></div>
+        </div>
+        <div data-for="a6" data-field="f-dataset" class="field-row" style="display:none">
+          <div class="field-group"><label>Dataset name <span class="field-hint">SSRS dataset in the RDL</span></label>
+            <input id="a6-dataset" type="text" placeholder="e.g. BookingsDataset" oninput="regen('a6')">
+          </div>
+        </div>
+        <div data-for="a6" data-field="f-sf" style="display:none">
+          <div class="sf-box"><div class="sf-box-lbl">Snowflake Data Source</div>
+            <div class="field-row">
+              <div class="field-group"><label>Server</label><input id="a6-sfsrv" type="text" placeholder="amawaterways.snowflakecomputing.com" oninput="regen('a6')"></div>
+              <div class="field-group"><label>Warehouse</label><input id="a6-sfwh" type="text" placeholder="AMA_WAREHOUSE" oninput="regen('a6')"></div>
+            </div>
+            <div class="field-row">
+              <div class="field-group"><label>Database</label><input id="a6-sfdb" type="text" placeholder="AMA_DB" oninput="regen('a6')"></div>
+              <div class="field-group"><label>Column <span class="field-hint">data field to bind</span></label><input id="a6-sfcol" type="text" placeholder="MARKET" oninput="regen('a6')"></div>
+            </div>
+          </div>
+        </div>
+        <div data-for="a6" data-field="f-sqladd" class="field-row" style="display:none">
+          <div class="field-group"><label>Add to SELECT</label><input id="a6-sqladd" type="text" placeholder="MARKET" oninput="regen('a6')"></div>
+          <div class="field-group"><label>Add WHERE <span class="field-hint">optional</span></label><input id="a6-sqlwhere" type="text" placeholder="e.g. YEAR = 2025" oninput="regen('a6')"></div>
+        </div>
+      </div>
+      <div class="prompt-wrap">
+        <div class="prompt-lbl-bar">Generated Claude Prompt — copy and paste into Claude</div>
+        <textarea class="prompt-out" id="pout-a6" readonly></textarea>
+        <button class="copy-btn" id="cbtn-a6" onclick="copyToClipboard('a6')">Copy prompt</button>
+      </div>
     </div>
     <div class="claude-result"><strong>What Claude does:</strong> Reads the RDL XML → finds the relevant nodes → inserts or modifies the XML → saves the file. No DLL, no COM, no software required — pure text editing.</div>
   </div>
@@ -638,13 +974,75 @@ $rdl.Save("C:\Reports\SBRR.rdl")</pre>
     <h3>Can Claude Be Used?</h3>
     <span class="claude-status c-yes">✅ Yes — Claude writes all Power Query M, DAX, and REST API code</span>
     <p class="claude-desc">Claude can write Power Query M code (add/transform columns from Snowflake), DAX measures (calculated metrics), and Power BI REST API scripts (trigger refreshes, push data, manage permissions). Claude cannot open the Power BI Desktop app or the browser-based Power BI Service directly, but it writes all the code — you paste it in or run the script.</p>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — add a column in Power Query M</div>
-      <div class="claude-prompt-text">Write the Power Query M code to connect to our Snowflake instance (amawaterways.snowflakecomputing.com, warehouse AMA_WAREHOUSE, database AMA_DB, schema REPORTING) and load the BOOKINGS_REVENUE table. Add a calculated column "Net Revenue per Guest" = [GROSS_REVENUE] / [GUEST_COUNT]. Show me where to paste this in Power BI Desktop.</div>
+    <div class="builder-cta">
+      <span class="builder-cta-text">Enter your Snowflake or Power BI details — Claude writes complete M / DAX / REST API code ready to paste.</span>
+      <button class="builder-toggle-btn" id="bt-a7" onclick="toggleBuilder('a7')">Build a prompt ▼</button>
     </div>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — trigger dataset refresh via REST API</div>
-      <div class="claude-prompt-text">Write a PowerShell script using the Power BI REST API to trigger a manual dataset refresh for the "SBRR Bookings Revenue" dataset in the "IT Reports" workspace. Use a service principal for authentication (tenant ID, client ID, client secret from environment variables). This should run automatically after each nightly Snowflake data load.</div>
+    <div class="builder" id="bb-a7" style="display:none">
+      <div class="builder-inner">
+        <div class="field-row">
+          <div class="field-group"><label>Action</label>
+            <select id="a7-action" onchange="updateAction('a7')">
+              <option value="pq-col">Add / transform a column in Power Query M</option>
+              <option value="dax">Create a DAX measure</option>
+              <option value="rest-ref">Trigger dataset refresh via REST API</option>
+            </select>
+          </div>
+        </div>
+        <div data-for="a7" data-field="f-sf" style="display:none">
+          <div class="sf-box"><div class="sf-box-lbl">Snowflake Connection</div>
+            <div class="field-row">
+              <div class="field-group"><label>Server</label><input id="a7-sfsrv" type="text" placeholder="amawaterways.snowflakecomputing.com" oninput="regen('a7')"></div>
+              <div class="field-group"><label>Warehouse</label><input id="a7-sfwh" type="text" placeholder="AMA_WAREHOUSE" oninput="regen('a7')"></div>
+            </div>
+            <div class="field-row">
+              <div class="field-group"><label>Database</label><input id="a7-sfdb" type="text" placeholder="AMA_DB" oninput="regen('a7')"></div>
+              <div class="field-group"><label>Schema <span class="field-hint">optional</span></label><input id="a7-sfsc" type="text" placeholder="e.g. REPORTING" oninput="regen('a7')"></div>
+            </div>
+            <div class="field-row">
+              <div class="field-group"><label>Table <span class="field-hint">optional</span></label><input id="a7-sftb" type="text" placeholder="e.g. BOOKINGS_REVENUE" oninput="regen('a7')"></div>
+              <div class="field-group"><label>Column</label><input id="a7-sfcol" type="text" placeholder="e.g. MARKET" oninput="regen('a7')"></div>
+            </div>
+          </div>
+        </div>
+        <div data-for="a7" data-field="f-pqcol" class="field-row" style="display:none">
+          <div class="field-group"><label>Column to add <span class="field-hint">Snowflake column or calculated name</span></label>
+            <input id="a7-pqcol" type="text" placeholder="e.g. Net Revenue per Guest" oninput="regen('a7')">
+          </div>
+        </div>
+        <div data-for="a7" data-field="f-pqcalc" class="field-row" style="display:none">
+          <div class="field-group full"><label>Calculation <span class="field-hint">leave blank to load existing Snowflake column</span></label>
+            <input id="a7-pqcalc" type="text" placeholder="e.g. [GROSS_REVENUE] / [GUEST_COUNT]" oninput="regen('a7')">
+          </div>
+        </div>
+        <div data-for="a7" data-field="f-pbitable" class="field-row" style="display:none">
+          <div class="field-group"><label>Table name <span class="field-hint">Power BI table</span></label>
+            <input id="a7-pbitable" type="text" placeholder="e.g. Bookings" oninput="regen('a7')">
+          </div>
+        </div>
+        <div data-for="a7" data-field="f-daxname" class="field-row" style="display:none">
+          <div class="field-group"><label>Measure name</label><input id="a7-daxname" type="text" placeholder="e.g. Revenue per Guest" oninput="regen('a7')"></div>
+        </div>
+        <div data-for="a7" data-field="f-daxdesc" class="field-row" style="display:none">
+          <div class="field-group full"><label>What should it calculate? <span class="field-hint">plain English description</span></label>
+            <input id="a7-daxdesc" type="text" placeholder="e.g. Total gross revenue divided by guest count, filtered to current year" oninput="regen('a7')">
+          </div>
+        </div>
+        <div data-for="a7" data-field="f-tenant" class="field-row" style="display:none">
+          <div class="field-group"><label>Tenant ID <span class="field-hint">Azure / Entra ID</span></label>
+            <input id="a7-tenant" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" oninput="regen('a7')">
+          </div>
+        </div>
+        <div data-for="a7" data-field="f-workspace" class="field-row" style="display:none">
+          <div class="field-group"><label>Workspace name</label><input id="a7-workspace" type="text" placeholder="e.g. IT Reports" oninput="regen('a7')"></div>
+          <div class="field-group"><label>Dataset name</label><input id="a7-dataset" type="text" placeholder="e.g. SBRR Bookings Revenue" oninput="regen('a7')"></div>
+        </div>
+      </div>
+      <div class="prompt-wrap">
+        <div class="prompt-lbl-bar">Generated Claude Prompt — copy and paste into Claude</div>
+        <textarea class="prompt-out" id="pout-a7" readonly></textarea>
+        <button class="copy-btn" id="cbtn-a7" onclick="copyToClipboard('a7')">Copy prompt</button>
+      </div>
     </div>
     <div class="claude-result"><strong>What Claude does:</strong> Writes complete Power Query M, DAX, and REST API code — copy-paste ready. <strong>What Claude cannot do:</strong> Directly open Power BI Desktop or the Power BI Service UI. You paste Claude's code into Power BI, or run the PowerShell REST API script.</div>
   </div>
@@ -699,13 +1097,73 @@ in
     <h3>Can Claude Be Used?</h3>
     <span class="claude-status c-yes">✅ Yes — Claude can fully modify JRXML files (same as SSRS — pure XML)</span>
     <p class="claude-desc">Just like SSRS, JasperReports uses XML (.jrxml). Claude reads, modifies, and writes JRXML files directly — no Java, no Jasper Studio required. Adding columns, renaming labels, changing SQL — all pure XML that Claude handles natively. After migration, any report change is a simple prompt.</p>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — add a column to a JRXML file</div>
-      <div class="claude-prompt-text">Open C:\Reports\Jasper\SBRR.jrxml and add a "Market" column after "CruiseCode". Header text should be bold Arial 8pt. The data cell should bind to $F{MARKET}. Match the width of the CruiseCode column. Save the file.</div>
+    <div class="builder-cta">
+      <span class="builder-cta-text">Fill in your JRXML and column details — Claude edits the XML or generates a new report from scratch.</span>
+      <button class="builder-toggle-btn" id="bt-a8" onclick="toggleBuilder('a8')">Build a prompt ▼</button>
     </div>
-    <div class="claude-prompt-wrap">
-      <div class="claude-prompt-label">Sample prompt — generate a new JRXML report from scratch</div>
-      <div class="claude-prompt-text">Create a new JasperReports JRXML file for a "SW2 Sailings Summary" report with columns: Sailing Code, Guest Count, Gross Revenue, Market. The Snowflake data source is amawaterways.snowflakecomputing.com. Include a page header with the title and page footer with the page number. Save to C:\Reports\Jasper\SW2_Summary.jrxml.</div>
+    <div class="builder" id="bb-a8" style="display:none">
+      <div class="builder-inner">
+        <div class="field-row">
+          <div class="field-group"><label>Action</label>
+            <select id="a8-action" onchange="updateAction('a8')">
+              <option value="add-col">Add a new column</option>
+              <option value="rename">Rename a label</option>
+              <option value="sql">Change the SQL query</option>
+              <option value="new-rep">Generate a new JRXML report from scratch</option>
+            </select>
+          </div>
+        </div>
+        <div data-for="a8" data-field="f-jrxml" class="field-row" style="display:none">
+          <div class="field-group full"><label>JRXML file path <span class="field-hint">path to .jrxml file (or output path for new report)</span></label>
+            <input id="a8-jrxml" type="text" placeholder="C:\Reports\Jasper\SBRR.jrxml" oninput="regen('a8')">
+          </div>
+        </div>
+        <div data-for="a8" data-field="f-old" class="field-row" style="display:none">
+          <div class="field-group"><label>Current label text</label><input id="a8-old" type="text" placeholder="e.g. Remarks" oninput="regen('a8')"></div>
+        </div>
+        <div data-for="a8" data-field="f-new" class="field-row" style="display:none">
+          <div class="field-group"><label>New label text</label><input id="a8-new" type="text" placeholder="e.g. Market" oninput="regen('a8')"></div>
+        </div>
+        <div data-for="a8" data-field="f-posafter" class="field-row" style="display:none">
+          <div class="field-group"><label>Place after <span class="field-hint">existing column name</span></label>
+            <input id="a8-posafter" type="text" placeholder="e.g. CruiseCode" oninput="regen('a8')">
+          </div>
+        </div>
+        <div data-for="a8" data-field="f-font" class="field-row" style="display:none">
+          <div class="field-group"><label>Font</label><input id="a8-font" type="text" placeholder="Arial 8pt bold" oninput="regen('a8')"></div>
+        </div>
+        <div data-for="a8" data-field="f-sf" style="display:none">
+          <div class="sf-box"><div class="sf-box-lbl">Snowflake Data Source</div>
+            <div class="field-row">
+              <div class="field-group"><label>Server</label><input id="a8-sfsrv" type="text" placeholder="amawaterways.snowflakecomputing.com" oninput="regen('a8')"></div>
+              <div class="field-group"><label>Database</label><input id="a8-sfdb" type="text" placeholder="AMA_DB" oninput="regen('a8')"></div>
+            </div>
+            <div class="field-row">
+              <div class="field-group"><label>Schema <span class="field-hint">optional</span></label><input id="a8-sfsc" type="text" placeholder="e.g. REPORTING" oninput="regen('a8')"></div>
+              <div class="field-group"><label>Column <span class="field-hint">data field name e.g. MARKET</span></label><input id="a8-sfcol" type="text" placeholder="MARKET" oninput="regen('a8')"></div>
+            </div>
+          </div>
+        </div>
+        <div data-for="a8" data-field="f-sqladd" class="field-row" style="display:none">
+          <div class="field-group"><label>Add to SELECT</label><input id="a8-sqladd" type="text" placeholder="MARKET" oninput="regen('a8')"></div>
+          <div class="field-group"><label>Add WHERE <span class="field-hint">optional</span></label><input id="a8-sqlwhere" type="text" placeholder="e.g. YEAR = 2025" oninput="regen('a8')"></div>
+        </div>
+        <div data-for="a8" data-field="f-jrcols" class="field-row" style="display:none">
+          <div class="field-group full"><label>Columns <span class="field-hint">comma-separated list of column names for new report</span></label>
+            <input id="a8-jrcols" type="text" placeholder="Sailing Code, Guest Count, Gross Revenue, Market" oninput="regen('a8')">
+          </div>
+        </div>
+        <div data-for="a8" data-field="f-exportpath" class="field-row" style="display:none">
+          <div class="field-group full"><label>Export output path <span class="field-hint">where to save the compiled report output</span></label>
+            <input id="a8-exportpath" type="text" placeholder="C:\Reports\Output\SW2_Summary.pdf" oninput="regen('a8')">
+          </div>
+        </div>
+      </div>
+      <div class="prompt-wrap">
+        <div class="prompt-lbl-bar">Generated Claude Prompt — copy and paste into Claude</div>
+        <textarea class="prompt-out" id="pout-a8" readonly></textarea>
+        <button class="copy-btn" id="cbtn-a8" onclick="copyToClipboard('a8')">Copy prompt</button>
+      </div>
     </div>
     <div class="claude-result"><strong>What Claude does:</strong> Reads the JRXML → modifies the XML → adds staticText (header) and textField (data) elements → updates the SQL queryString → saves the file. No Jasper Studio, no Java compilation needed.</div>
   </div>
@@ -819,5 +1277,232 @@ in
 </div>
 
 </div>
+
+<script>
+(function(){
+'use strict';
+function fv(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function fr(name){var e=document.querySelector('input[name="'+name+'"]:checked');return e?e.value:'local';}
+
+var FIELDS={
+  a1:{rename:['f-path','f-section','f-old','f-new','f-deploy'],reposition:['f-path','f-section','f-old','f-posafter','f-deploy'],sql:['f-path','f-sf','f-sqladd','f-sqlwhere','f-deploy'],format:['f-path','f-section','f-old','f-font','f-deploy'],audit:['f-path','f-section']},
+  a2:{'add-header':['f-path','f-section','f-new','f-posafter','f-font','f-sf','f-deploy'],'add-field':['f-path','f-sf','f-posafter','f-deploy'],rename:['f-path','f-section','f-old','f-new','f-deploy'],sql:['f-path','f-sf','f-sqladd','f-sqlwhere','f-deploy'],export:['f-path','f-sf','f-exportfmt','f-exportpath'],'bulk-rename':['f-folder','f-section','f-old','f-new']},
+  a3:{design:['f-actiondesc','f-context'],troubleshoot:['f-problemdesc']},
+  a4:{schedule:['f-boeserver','f-reportname','f-schedtime','f-exportfmt','f-exportpath'],export:['f-boeserver','f-reportname','f-exportfmt','f-exportpath'],refresh:['f-boeserver','f-reportname']},
+  a5:{audit:['f-path']},
+  a6:{'add-col':['f-rdlpath','f-sf','f-new','f-posafter','f-font','f-dataset'],rename:['f-rdlpath','f-old','f-new'],sql:['f-rdlpath','f-dataset','f-sqladd','f-sqlwhere'],'batch-rename':['f-folder','f-old','f-new']},
+  a7:{'pq-col':['f-sf','f-pqcol','f-pqcalc'],dax:['f-pbitable','f-daxname','f-daxdesc'],'rest-ref':['f-tenant','f-workspace','f-dataset']},
+  a8:{'add-col':['f-jrxml','f-new','f-sf','f-posafter','f-font'],rename:['f-jrxml','f-old','f-new'],sql:['f-jrxml','f-sqladd','f-sqlwhere'],'new-rep':['f-jrxml','f-jrcols','f-sf','f-exportpath']}
+};
+
+window.toggleBuilder=function(id){
+  var b=document.getElementById('bb-'+id),t=document.getElementById('bt-'+id);
+  var open=b.style.display!=='none';
+  b.style.display=open?'none':'block';
+  t.textContent=open?'Build a prompt ▼':'Close builder ▲';
+};
+
+window.updateAction=function(id){
+  document.querySelectorAll('[data-for="'+id+'"]').forEach(function(el){el.style.display='none';});
+  var action=fv(id+'-action');
+  var show=(FIELDS[id]||{})[action]||[];
+  show.forEach(function(f){
+    document.querySelectorAll('[data-for="'+id+'"][data-field="'+f+'"]').forEach(function(el){el.style.display='';});
+  });
+  regen(id);
+};
+
+window.regen=function(id){
+  var out=document.getElementById('pout-'+id);
+  if(out)out.value=buildPrompt(id);
+};
+
+function SF(id){
+  var srv=fv(id+'-sfsrv')||'amawaterways.snowflakecomputing.com';
+  var wh=fv(id+'-sfwh')||'AMA_WAREHOUSE';
+  var db=fv(id+'-sfdb')||'AMA_DB';
+  var sc=fv(id+'-sfsc');var tb=fv(id+'-sftb');var col=fv(id+'-sfcol');
+  var L=['=== SNOWFLAKE DATA SOURCE ===','Server:    '+srv,'Warehouse: '+wh,'Database:  '+db];
+  if(sc)L.push('Schema:    '+sc);if(tb)L.push('Table:     '+tb);if(col)L.push('Column:    '+col);
+  return L.join('\n');
+}
+function ENV(id){
+  var e={
+    a1:'CR Version: SAP Crystal Reports 2016 SP9 (v14.2.9.5104)\nMethod:     COM via CrystalDesignRunTime.Application (32-bit)\nRun via:    %SystemRoot%\\SysWOW64\\cscript.exe\nODBC DSN:   AMA_SNOWFLAKE_ODBC_CONNECTOR (32-bit)',
+    a2:'CR Version: SAP Crystal Reports 2016 SP9 (v14.2.9.5104)\nMethod:     CrystalDecisions .NET API (PowerShell)\nDLL:        CrystalDecisions.CrystalReports.Engine.dll\nODBC DSN:   AMA_SNOWFLAKE_ODBC_CONNECTOR (32-bit)',
+    a3:'Tool:       Power Automate Desktop (pre-installed on Windows 11)\nNote:       Claude designs flow steps; a human records them in PAD',
+    a4:'Tool:       SAP BusinessObjects REST API\nNote:       Scheduling and export only — cannot modify report design',
+    a5:'Tool:       Python + olefile library (READ-ONLY)\nInstall:    pip install olefile',
+    a6:'Tool:       SSRS — SQL Server Reporting Services\nFormat:     RDL (XML) — Claude edits XML directly, no software needed',
+    a7:'Tool:       Power BI (Power Query M + DAX + REST API)\nNote:       Claude writes code — you paste into Power BI Desktop or run script',
+    a8:'Tool:       JasperReports (JRXML XML)\nNote:       Claude edits XML directly — no Jasper Studio or Java compilation needed'
+  };
+  return '=== ENVIRONMENT ===\n'+(e[id]||'');
+}
+function DEPLOY(id){
+  var mode=fr(id+'-deploy');
+  var net='\\\\internal\\reports\\SW1 and SW2\\';
+  if(mode==='local'){return '=== SAVE / DEPLOY ===\n• Save to LOCAL working copy ONLY\n• Do NOT touch the network path: '+net;}
+  return '=== SAVE / DEPLOY ===\n• Ask for my APPROVAL before writing to the network file: '+net;
+}
+var CONSTRAINTS='=== CONSTRAINTS ===\n• Show current state BEFORE making any changes\n• If target not found, list what IS there and ask me to clarify\n• Provide before/after confirmation for every change\n• If Crystal Reports has the file open, stop and ask me to close it first';
+
+function buildPrompt(id){
+  var action=fv(id+'-action');if(!action)return '';
+  var fields=(FIELDS[id]||{})[action]||[];
+  var hasSF=fields.indexOf('f-sf')>-1;
+  var hasDeploy=fields.indexOf('f-deploy')>-1;
+  var path=fv(id+'-path');var section=fv(id+'-section')||'PageHeaderSection1';
+  var oldTxt=fv(id+'-old');var newTxt=fv(id+'-new');var posafter=fv(id+'-posafter');
+  var font=fv(id+'-font')||'Arial 8pt bold';var sqladd=fv(id+'-sqladd');
+  var sqlwhere=fv(id+'-sqlwhere');var efmt=fv(id+'-exportfmt')||'PDF';
+  var epath=fv(id+'-exportpath');var folder=fv(id+'-folder');
+  var sfcol=fv(id+'-sfcol')||'[COLUMN_NAME]';
+  var env=ENV(id);var sfPart=hasSF?'\n\n'+SF(id):'';
+  var depPart=hasDeploy?'\n\n'+DEPLOY(id):'';
+  var conPart=(id!=='a3'&&id!=='a4'&&id!=='a5')?'\n\n'+CONSTRAINTS:'';
+  var task='',steps='';
+
+  if(id==='a1'){
+    var rpt=path||'[path to .rpt file]';
+    if(action==='rename'){
+      task='=== TASK: Rename a column label ===\nReport:       '+rpt+'\nSection:      '+section+'\nCurrent text: "'+(oldTxt||'[current label]')+'"\nNew text:     "'+(newTxt||'[new label]')+'"';
+      steps='=== STEPS FOR CLAUDE ===\n1. Open report via COM (CrystalDesignRunTime.Application, SysWOW64\\cscript.exe)\n2. List all objects in '+section+' with Text, Left, Top, Width, Height\n3. Find object matching "'+(oldTxt||'[label]')+'" (case-insensitive)\n4. Set Text = "'+(newTxt||'[new label]')+'" — do NOT change position, size, or font\n5. Save the file (report.Save)\n6. Print before/after summary';
+    }else if(action==='reposition'){
+      task='=== TASK: Reposition a column ===\nReport:       '+rpt+'\nSection:      '+section+'\nTarget label: "'+(oldTxt||'[label to move]')+'"\nPlace after:  "'+(posafter||'[column name]')+'"';
+      steps='=== STEPS FOR CLAUDE ===\n1. Open report via COM\n2. List all objects in '+section+' with Left, Top, Width, Height (sorted by Left)\n3. Find "'+(posafter||'[column]')+'" → get its Right edge (Left + Width)\n4. Move target: Left = Right edge + small gap; keep Top, Width, Height, font unchanged\n5. Save and confirm new position';
+    }else if(action==='sql'){
+      task='=== TASK: Modify the SQL query ===\nReport:       '+rpt+'\nAdd to SELECT: '+(sqladd||sfcol)+'\nAdd WHERE:    '+(sqlwhere||'(none — add column to SELECT only)');
+      steps='=== STEPS FOR CLAUDE ===\n1. Open report via COM\n2. Access the SQL Command data source (Tables[0].CommandText)\n3. Print the CURRENT SQL before changing anything\n4. Add "'+(sqladd||sfcol)+'" to the SELECT list\n5. '+(sqlwhere?'Add WHERE: '+sqlwhere:'No WHERE change needed')+'\n6. Set modified CommandText back, save\n7. Print the new SQL for confirmation';
+    }else if(action==='format'){
+      task='=== TASK: Change font / formatting ===\nReport:       '+rpt+'\nSection:      '+section+'\nTarget label: "'+(oldTxt||'[label name]')+'"\nNew font:     '+font;
+      steps='=== STEPS FOR CLAUDE ===\n1. Open report via COM\n2. Find "'+(oldTxt||'[label]')+'" in '+section+'\n3. Print current font: Name, Size, Bold, Color\n4. Apply new font: '+font+'\n5. Save and confirm change';
+    }else if(action==='audit'){
+      task='=== TASK: Audit report structure (list everything) ===\nReport: '+rpt;
+      steps='=== STEPS FOR CLAUDE ===\n1. Open report via COM\n2. Loop every Section → print Section.Name\n3. For each section, loop every ReportObject:\n   Print: Name, Type, Text (if TextObject), Left, Top, Width, Height\n4. Also extract SQL CommandText if it exists\n5. Output as a structured table or formatted list';
+    }
+  }else if(id==='a2'){
+    var rpt2=path||'[path to .rpt file]';
+    if(action==='add-header'){
+      task='=== TASK: Add a new column header (text label) ===\nReport:      '+rpt2+'\nSection:     '+section+'\nNew label:   "'+(newTxt||'[new column name]')+'"\nPlace after: "'+(posafter||'[existing column]')+'"\nFont:        '+font;
+      steps='=== STEPS FOR CLAUDE ===\n1. Load CrystalDecisions DLL, open report\n2. List all objects in '+section+' with Left, Top, Width, Height\n3. Find "'+(posafter||'[column]')+'" → get its Right edge (Left + Width)\n4. Create TextObject: Text="'+(newTxt||'[label]')+'", Left = Right + gap, match Height/Top of adjacent headers\n5. Apply font: '+font+'\n6. Add to section, SaveAs local copy\n7. Confirm coordinates added';
+    }else if(action==='add-field'){
+      task='=== TASK: Add a new data field column ===\nReport:        '+rpt2+'\nSection:       DetailSection1\nSnowflake col: '+sfcol+'\nPlace after:   "'+(posafter||'[existing field]')+'"';
+      steps='=== STEPS FOR CLAUDE ===\n1. Load CrystalDecisions DLL, open report\n2. List all field objects in DetailSection1 with Left, Width, Height\n3. Find "'+(posafter||'[field]')+'" → get its Right edge\n4. Create FieldObject bound to '+sfcol+', match Width/Height of adjacent fields\n5. Add to DetailSection1, SaveAs local copy\n6. Print before/after field list';
+    }else if(action==='rename'){
+      task='=== TASK: Rename an existing label ===\nReport:       '+rpt2+'\nSection:      '+section+'\nCurrent text: "'+(oldTxt||'[current label]')+'"\nNew text:     "'+(newTxt||'[new label]')+'"';
+      steps='=== STEPS FOR CLAUDE ===\n1. Load CrystalDecisions DLL, open report\n2. Find "'+(oldTxt||'[label]')+'" in '+section+'\n3. Set Text = "'+(newTxt||'[new label]')+'"\n4. SaveAs local copy\n5. Print before/after confirmation';
+    }else if(action==='sql'){
+      task='=== TASK: Change the SQL query ===\nReport:       '+rpt2+'\nAdd to SELECT: '+(sqladd||sfcol)+'\nAdd WHERE:    '+(sqlwhere||'(none)');
+      steps='=== STEPS FOR CLAUDE ===\n1. Load CrystalDecisions DLL, open report\n2. Print the CURRENT CommandText SQL\n3. Add "'+(sqladd||sfcol)+'" to SELECT'+(sqlwhere?', add WHERE: '+sqlwhere:'')+'\n4. Set CommandText back, SaveAs local copy\n5. Print new SQL for confirmation';
+    }else if(action==='export'){
+      task='=== TASK: Export report to '+efmt+' ===\nReport:  '+rpt2+'\nFormat:  '+efmt+'\nSave to: '+(epath||'[output file path]');
+      steps='=== STEPS FOR CLAUDE ===\n1. Load CrystalDecisions DLL, open report\n2. Set ODBC login (DSN: AMA_SNOWFLAKE_ODBC_CONNECTOR)\n3. Run report (refresh data from Snowflake)\n4. Export to '+efmt+': '+(epath||'[output path]')+'\n5. Print confirmation with file size';
+    }else if(action==='bulk-rename'){
+      task='=== TASK: Bulk rename label across all reports in folder ===\nFolder:       '+(folder||'[folder path]')+'\nSection:      '+section+'\nCurrent text: "'+(oldTxt||'[current label]')+'"\nNew text:     "'+(newTxt||'[new label]')+'"';
+      steps='=== STEPS FOR CLAUDE ===\n1. Get all .rpt files in "'+(folder||'[folder]')+'"\n2. For each file: load via CrystalDecisions DLL\n3. Search '+section+' for "'+(oldTxt||'[label]')+'"\n4. If found: rename to "'+(newTxt||'[new label]')+'", SaveAs (overwrite)\n5. Print table: File | Found | Changed | Skipped\n6. Print totals at end';
+    }
+  }else if(id==='a3'){
+    if(action==='design'){
+      var ad=fv('a3-actiondesc')||'[describe what you want to automate]';
+      var ctx=fv('a3-context');
+      task='=== TASK: Design a Power Automate Desktop flow ===\nAction to automate: '+ad+(ctx?'\nAdditional context: '+ctx:'');
+      steps='=== STEPS FOR CLAUDE ===\n1. List the exact sequence of Power Automate Desktop actions needed\n2. For each step: Action type → target element → what to click/type\n3. Identify which values to parameterize as input variables\n4. Add error handling (e.g. window-not-found → retry)\n5. Provide instructions to schedule or trigger the flow\nNOTE: Claude designs the flow — you record it manually in Power Automate Desktop';
+    }else{
+      var prob=fv('a3-problemdesc')||'[describe what broke]';
+      task='=== TASK: Troubleshoot a broken Power Automate Desktop flow ===\nProblem: '+prob;
+      steps='=== STEPS FOR CLAUDE ===\n1. Diagnose the most likely root cause\n2. Suggest resolution-independent fixes (anchor by window title/text, not pixel position)\n3. Provide updated flow steps to fix the issue\n4. Add a validation step to confirm the fix worked';
+    }
+  }else if(id==='a4'){
+    var boe=fv('a4-boeserver')||'http://boe-server:6405';
+    var rname=fv('a4-reportname')||'[report name in BOE]';
+    if(action==='schedule'){
+      var scht=fv('a4-schedtime')||'every weekday at 06:00 AM';
+      task='=== TASK: Schedule report via BOE REST API ===\nBOE Server:  '+boe+'\nReport:      '+rname+'\nSchedule:    '+scht+'\nFormat:      '+efmt+'\nExport to:   '+(epath||'[output path]');
+      steps='=== STEPS FOR CLAUDE ===\n1. Authenticate to BOE REST API at '+boe+'\n2. Search InfoStore for report "'+rname+'"\n3. Create schedule: recurrence='+scht+', format='+efmt+'\n4. Set output destination: '+(epath||'[output path]')+'\n5. Print schedule ID and next run time';
+    }else if(action==='export'){
+      task='=== TASK: Export report via BOE REST API ===\nBOE Server:  '+boe+'\nReport:      '+rname+'\nFormat:      '+efmt+'\nSave to:     '+(epath||'[output path]');
+      steps='=== STEPS FOR CLAUDE ===\n1. Authenticate to BOE REST API\n2. Find "'+rname+'" in InfoStore\n3. Run on-demand instance, wait for completion\n4. Export to '+efmt+', save to '+(epath||'[output path]');
+    }else{
+      task='=== TASK: Trigger data refresh via BOE REST API ===\nBOE Server:  '+boe+'\nReport:      '+rname;
+      steps='=== STEPS FOR CLAUDE ===\n1. Authenticate to BOE REST API\n2. Find "'+rname+'" in InfoStore\n3. Schedule an immediate (now) run, wait for completion\n4. Print result: success/failure and completion time';
+    }
+  }else if(id==='a5'){
+    var rpt5=path||'[path to .rpt file]';
+    task='=== TASK: Read-only binary audit of .rpt file ===\nReport: '+rpt5;
+    steps='=== STEPS FOR CLAUDE ===\n1. Install olefile: pip install olefile\n2. Open the .rpt file with OleFileIO\n3. List all OLE2 stream names\n4. Read key streams and extract readable text strings\n5. Look for SQL fragments, object labels, section names in the binary data\n6. Output a structured summary\nWARNING: Read-only — do NOT attempt to write to the .rpt binary (will corrupt the file)';
+  }else if(id==='a6'){
+    var rdl=fv('a6-rdlpath')||'[path to .rdl file]';
+    var ds=fv('a6-dataset')||'[dataset name]';
+    if(action==='add-col'){
+      task='=== TASK: Add a new column to SSRS RDL ===\nRDL file:    '+rdl+'\nNew column:  "'+(newTxt||'[column header]')+'"\nPlace after: "'+(posafter||'[existing column]')+'"\nData field:  '+sfcol+'\nDataset:     '+ds+'\nFont:        '+font;
+      steps='=== STEPS FOR CLAUDE ===\n1. Load RDL XML\n2. Find the Tablix and locate column after "'+(posafter||'[column]')+'"\n3. Insert a new TablixColumn with matching width\n4. Add header cell: StaticText "'+(newTxt||'[label]')+'", font '+font+'\n5. Add data cell: bind to '+sfcol+' from dataset "'+ds+'"\n6. Save RDL, print added XML nodes for confirmation';
+    }else if(action==='rename'){
+      task='=== TASK: Rename a label in SSRS RDL ===\nRDL file:     '+rdl+'\nCurrent text: "'+(oldTxt||'[current label]')+'"\nNew text:     "'+(newTxt||'[new label]')+'"';
+      steps='=== STEPS FOR CLAUDE ===\n1. Load RDL XML\n2. Find all Textbox/Value elements containing "'+(oldTxt||'[label]')+'"\n3. Print what was found before changing anything\n4. Update text to "'+(newTxt||'[new label]')+'"\n5. Save RDL, print count of changes made';
+    }else if(action==='sql'){
+      task='=== TASK: Change SQL query in SSRS dataset ===\nRDL file:      '+rdl+'\nDataset:       '+ds+'\nAdd to SELECT: '+(sqladd||sfcol)+'\nAdd WHERE:     '+(sqlwhere||'(none)');
+      steps='=== STEPS FOR CLAUDE ===\n1. Load RDL XML\n2. Find DataSet "'+ds+'" → print current CommandText (SQL)\n3. Add "'+(sqladd||sfcol)+'" to SELECT'+(sqlwhere?', add WHERE: '+sqlwhere:'')+'\n4. Save RDL, print new SQL for confirmation';
+    }else{
+      task='=== TASK: Batch rename label across all RDL files ===\nFolder:       '+(folder||'[folder path]')+'\nCurrent text: "'+(oldTxt||'[current label]')+'"\nNew text:     "'+(newTxt||'[new label]')+'"';
+      steps='=== STEPS FOR CLAUDE ===\n1. Get all .rdl files in "'+(folder||'[folder]')+'"\n2. For each: load XML, find Textbox/Value with "'+(oldTxt||'[label]')+'"\n3. Replace with "'+(newTxt||'[new label]')+'", save if changed\n4. Print: File | Found | Changed';
+    }
+  }else if(id==='a7'){
+    if(action==='pq-col'){
+      var srv7=fv('a7-sfsrv')||'amawaterways.snowflakecomputing.com';
+      var wh7=fv('a7-sfwh')||'AMA_WAREHOUSE';var db7=fv('a7-sfdb')||'AMA_DB';
+      var sc7=fv('a7-sfsc');var tb7=fv('a7-sftb');
+      var pqcol=fv('a7-pqcol')||'[column name]';var pqcalc=fv('a7-pqcalc');
+      task='=== TASK: Add / transform column in Power Query M ===\nSnowflake:   '+srv7+'\nWarehouse:   '+wh7+'\nDatabase:    '+db7+(sc7?'\nSchema:      '+sc7:'')+(tb7?'\nTable:       '+tb7:'')+'\nColumn:      '+pqcol+(pqcalc?'\nCalculation: '+pqcalc:'');
+      steps='=== STEPS FOR CLAUDE ===\n1. Write complete Power Query M code to:\n   a. Connect to Snowflake at '+srv7+' (Warehouse: '+wh7+', Database: '+db7+(sc7?', Schema: '+sc7:'')+')\n   b. Load table'+(tb7?' "'+tb7+'"':'')+'\n   c. '+(pqcalc?'Add calculated column "'+pqcol+'" = '+pqcalc:'Include Snowflake column "'+pqcol+'" in the dataset')+'\n2. Show where to paste (Home → Transform Data → Advanced Editor)\n3. Include a rename step if the column name needs adjusting';
+    }else if(action==='dax'){
+      var tbl=fv('a7-pbitable')||'[table name]';
+      var dname=fv('a7-daxname')||'[measure name]';var ddesc=fv('a7-daxdesc')||'[describe calculation]';
+      task='=== TASK: Create a DAX measure ===\nTable:        '+tbl+'\nMeasure name: '+dname+'\nDescription:  '+ddesc;
+      steps='=== STEPS FOR CLAUDE ===\n1. Write the DAX expression for: '+ddesc+'\n2. Format as: '+dname+' = [your DAX expression]\n3. Show how to add in Power BI Desktop (Home → New Measure)\n4. Include a sample table visual to verify the result is correct';
+    }else{
+      var ten=fv('a7-tenant')||'[tenant ID]';var ws=fv('a7-workspace')||'[workspace name]';var dst=fv('a7-dataset')||'[dataset name]';
+      task='=== TASK: Trigger dataset refresh via Power BI REST API ===\nTenant ID:   '+ten+'\nWorkspace:   '+ws+'\nDataset:     '+dst;
+      steps='=== STEPS FOR CLAUDE ===\n1. Write PowerShell script to:\n   a. Authenticate via service principal (tenant: '+ten+')\n   b. Find workspace "'+ws+'" and dataset "'+dst+'"\n   c. POST to /datasets/{id}/refreshes to trigger refresh\n   d. Poll status until complete, print result\n2. Include Entra ID (Azure AD) setup instructions for the service principal\n3. Show how to schedule this to run after the nightly Snowflake data load';
+    }
+  }else if(id==='a8'){
+    var jrxml=fv('a8-jrxml')||'[path to .jrxml file]';
+    if(action==='add-col'){
+      task='=== TASK: Add a column to JRXML report ===\nJRXML file:  '+jrxml+'\nNew column:  "'+(newTxt||'[column header]')+'"\nData field:  $F{'+(sfcol)+'}\nPlace after: "'+(posafter||'[existing column]')+'"\nFont:        '+font;
+      steps='=== STEPS FOR CLAUDE ===\n1. Load and parse the JRXML XML file\n2. Find "'+(posafter||'[column]')+'" → get its x position and width\n3. Add <staticText> header element: text="'+(newTxt||'[label]')+'", x=right edge, font='+font+'\n4. Add <textField> data element: expression=$F{'+(sfcol)+'}, same x and width\n5. Save JRXML, print the added XML nodes';
+    }else if(action==='rename'){
+      task='=== TASK: Rename a label in JRXML ===\nJRXML file:   '+jrxml+'\nCurrent text: "'+(oldTxt||'[current label]')+'"\nNew text:     "'+(newTxt||'[new label]')+'"';
+      steps='=== STEPS FOR CLAUDE ===\n1. Load JRXML XML\n2. Find all <staticText><text> elements containing "'+(oldTxt||'[label]')+'"\n3. Print what was found before changing anything\n4. Update text to "'+(newTxt||'[new label]')+'"\n5. Save JRXML, print count of changes made';
+    }else if(action==='sql'){
+      task='=== TASK: Change SQL query in JRXML ===\nJRXML file:    '+jrxml+'\nAdd to SELECT: '+(sqladd||sfcol)+'\nAdd WHERE:     '+(sqlwhere||'(none)');
+      steps='=== STEPS FOR CLAUDE ===\n1. Load JRXML XML\n2. Find the <queryString> element → print CURRENT SQL\n3. Add "'+(sqladd||sfcol)+'" to SELECT'+(sqlwhere?', add WHERE: '+sqlwhere:'')+'\n4. Save JRXML, print new query for confirmation';
+    }else{
+      var jrcols=fv('a8-jrcols')||'[col1, col2, col3]';
+      task='=== TASK: Generate a new JRXML report from scratch ===\nJRXML output: '+jrxml+'\nColumns:      '+jrcols+'\nSnowflake:    '+(fv('a8-sfsrv')||'amawaterways.snowflakecomputing.com')+'\nDatabase:     '+(fv('a8-sfdb')||'AMA_DB')+(epath?'\nExport to:    '+epath:'');
+      steps='=== STEPS FOR CLAUDE ===\n1. Generate a complete valid JRXML 6.x document\n2. Include page header with report title and "AmaWaterways" company name\n3. Create columns: '+jrcols+'\n4. Include <queryString> with Snowflake JDBC connection\n5. Add page footer with page number ($V{PAGE_NUMBER} of $V{PAGE_COUNT})\n6. Save to: '+jrxml+'\n7. Provide compilation command: jrc -compile "'+jrxml+'"';
+    }
+  }
+
+  if(!task)return '';
+  return env+sfPart+'\n\n'+task+'\n\n'+steps+depPart+conPart;
+}
+
+window.copyToClipboard=function(id){
+  var ta=document.getElementById('pout-'+id);
+  var btn=document.getElementById('cbtn-'+id);
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(function(){
+    btn.textContent='✓ Copied!';setTimeout(function(){btn.textContent='Copy prompt';},2000);
+  }).catch(function(){
+    document.execCommand('copy');
+    btn.textContent='✓ Copied!';setTimeout(function(){btn.textContent='Copy prompt';},2000);
+  });
+};
+
+document.addEventListener('DOMContentLoaded',function(){
+  ['a1','a2','a3','a4','a5','a6','a7','a8'].forEach(function(id){updateAction(id);});
+});
+})();
+</script>
 </body>
 </html>
