@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crystal Reports Automation — AmaWaterways IT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --vivace:     #B34F3D;
+    --ivory:      #E8E6D8;
+    --allegretto: #A48E7E;
+    --bassoon:    #231A11;
+    --baroque:    #5B1C1C;
+    --brass:      #9C8647;
+    --silenzio:   #F5F5F5;
+    --blue-danube:#BAE0F6;
+    --ink-soft:   #4a3d2e;
+    --ok:         #4a7c59;
+    --ok-light:   #e6f4ec;
+    --rule:       rgba(35,26,17,.16);
+    --claude:     #1a6b8a;
+    --claude-bg:  rgba(186,224,246,.18);
+    --ff-display: 'Spectral','GT Alpina','Times New Roman',Georgia,serif;
+    --ff-body:    'Inter','Neue Haas Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--ff-body); font-size: 15px; color: var(--bassoon); background: var(--ivory); line-height: 1.65; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  .page { max-width: 1120px; margin: 0 auto; padding: 0 clamp(1.25rem,4vw,2.5rem) 80px; }
+
+  /* HUD */
+  .hud { background: var(--bassoon); padding: 0 clamp(1.5rem,4vw,3rem); display: flex; align-items: center; justify-content: space-between; height: 58px; position: sticky; top: 0; z-index: 100; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; }
+  .hud__mark { display: flex; align-items: center; gap: 0.65rem; color: var(--allegretto); }
+  .hud__mark::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--vivace); flex-shrink: 0; }
+  .hud__wordmark { font-family: var(--ff-display); font-style: italic; font-weight: 400; font-size: 1.05rem; color: var(--vivace); text-transform: none; letter-spacing: -0.005em; }
+  .hud__dept { color: rgba(232,230,216,.45); font-size: 0.62rem; letter-spacing: 0.22em; }
+
+  /* Hero */
+  .hero { background: var(--bassoon); color: var(--ivory); padding: 52px clamp(1.5rem,5vw,3.5rem) 44px; margin-bottom: 40px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(186,224,246,.07), transparent 60%), radial-gradient(ellipse 60% 40% at 90% 100%, rgba(164,142,126,.08), transparent 65%); }
+  .hero-eyebrow { font-size: 0.68rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--vivace); display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.75rem; }
+  .hero-eyebrow::before { content: ''; width: 22px; height: 1px; background: var(--vivace); }
+  .hero h1 { font-family: var(--ff-display); font-weight: 300; font-size: clamp(2.4rem,5vw,4rem); line-height: 1.05; letter-spacing: -0.025em; margin-bottom: 1rem; position: relative; }
+  .hero h1 em { font-style: italic; color: var(--vivace); }
+  .hero p { font-family: var(--ff-display); font-style: italic; font-size: 1.1rem; color: var(--allegretto); max-width: 64ch; line-height: 1.55; position: relative; }
+  .meta { margin-top: 2rem; display: flex; flex-wrap: wrap; position: relative; }
+  .meta-item { padding: 5px 18px 5px 0; margin-right: 18px; border-right: 1px solid rgba(232,230,216,.15); }
+  .meta-item:last-child { border-right: none; }
+  .meta-item strong { display: block; font-weight: 500; font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--vivace); margin-bottom: 2px; }
+  .meta-item span { font-size: 0.82rem; color: rgba(232,230,216,.65); }
+
+  /* TOC */
+  .toc { background: var(--silenzio); border: 1px solid var(--rule); border-top: 3px solid var(--vivace); padding: 24px 28px; margin-bottom: 40px; }
+  .toc h2 { font-weight: 500; font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--vivace); margin-bottom: 16px; }
+  .toc-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(290px,1fr)); gap: 2px 24px; }
+  .toc a { color: var(--ink-soft); text-decoration: none; font-size: 0.875rem; display: flex; align-items: center; gap: 10px; padding: 5px 0; transition: color .2s; }
+  .toc a:hover { color: var(--vivace); }
+  .toc-num { background: var(--vivace); color: var(--ivory); width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 700; flex-shrink: 0; }
+
+  /* Approach cards */
+  .approach { background: var(--silenzio); border: 1px solid var(--rule); margin-bottom: 36px; overflow: hidden; }
+  .approach-header { padding: 24px 28px 18px; border-bottom: 1px solid var(--rule); display: flex; align-items: flex-start; gap: 20px; background: #fff; }
+  .approach-number { font-family: var(--ff-display); font-size: 2.4rem; font-weight: 300; line-height: 1; min-width: 44px; color: var(--vivace); }
+  .approach-title h2 { font-family: var(--ff-display); font-weight: 400; font-size: 1.25rem; letter-spacing: -0.018em; color: var(--bassoon); }
+  .approach-title .subtitle { font-size: 0.875rem; color: var(--allegretto); margin-top: 4px; line-height: 1.5; }
+  .badges { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
+  .badge { display: inline-block; padding: 3px 10px; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; border: 1px solid; }
+  .badge-easy      { border-color: var(--ok);        color: var(--ok);        background: var(--ok-light); }
+  .badge-medium    { border-color: var(--allegretto); color: var(--ink-soft);  background: rgba(164,142,126,.1); }
+  .badge-hard      { border-color: var(--baroque);    color: var(--baroque);   background: rgba(91,28,28,.06); }
+  .badge-free      { border-color: var(--ok);         color: var(--ok);        background: var(--ok-light); }
+  .badge-paid      { border-color: var(--baroque);    color: var(--baroque);   background: rgba(91,28,28,.06); }
+  .badge-freemium  { border-color: var(--brass);      color: var(--brass);     background: rgba(156,134,71,.08); }
+  .badge-rec       { background: var(--vivace);       color: var(--ivory);     border-color: var(--vivace); }
+  .badge-migration { border-color: var(--allegretto); color: var(--allegretto); background: transparent; }
+  .badge-installed { border-color: var(--brass);      color: var(--brass);     background: rgba(156,134,71,.08); }
+  .badge-fragile   { border-color: var(--baroque);    color: var(--baroque);   background: rgba(91,28,28,.06); }
+
+  /* Fixes panel */
+  .fixes-panel { background: rgba(232,230,216,.6); border-bottom: 1px solid var(--rule); padding: 20px 28px; }
+  .fixes-panel h3 { font-weight: 500; font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--vivace); display: flex; align-items: center; gap: 0.65rem; margin-bottom: 14px; }
+  .fixes-panel h3::before { content: ''; width: 22px; height: 1px; background: var(--vivace); }
+  .fixes-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 10px; }
+  .fix-item { background: #fff; border: 1px solid var(--rule); padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; transition: border-color .25s; }
+  .fix-item:hover { border-color: var(--vivace); }
+  .fix-icon { font-size: 0.9rem; flex-shrink: 0; margin-top: 2px; }
+  .fix-text { font-size: 0.82rem; line-height: 1.45; color: var(--ink-soft); }
+  .fix-text strong { display: block; font-weight: 600; font-size: 0.78rem; color: var(--bassoon); margin-bottom: 2px; }
+
+  /* Claude panel */
+  .claude-panel { background: var(--claude-bg); border-bottom: 1px solid var(--rule); padding: 20px 28px; }
+  .claude-panel h3 { font-weight: 500; font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--claude); display: flex; align-items: center; gap: 0.65rem; margin-bottom: 14px; }
+  .claude-panel h3::before { content: ''; width: 22px; height: 1px; background: var(--claude); }
+  .claude-status { display: inline-flex; align-items: center; gap: 7px; padding: 5px 14px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; border: 1px solid; }
+  .c-yes     { border-color: var(--ok);      color: var(--ok);      background: var(--ok-light); }
+  .c-partial { border-color: var(--brass);   color: var(--brass);   background: rgba(156,134,71,.1); }
+  .c-no      { border-color: var(--baroque); color: var(--baroque); background: rgba(91,28,28,.06); }
+  .claude-desc { font-size: 0.875rem; color: var(--ink-soft); margin-bottom: 14px; line-height: 1.55; }
+  .claude-prompt-wrap { background: var(--bassoon); border-left: 3px solid #4ab3d9; padding: 14px 16px; margin: 10px 0; }
+  .claude-prompt-label { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: #4ab3d9; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .claude-prompt-label::before { content: '▶'; font-size: 0.6rem; }
+  .claude-prompt-text { font-family: 'Cascadia Code','Consolas',monospace; font-size: 0.8rem; color: #d6cfc4; line-height: 1.6; white-space: pre-wrap; }
+  .claude-result { background: rgba(74,179,217,.08); border: 1px solid rgba(74,179,217,.25); border-left: 3px solid var(--claude); padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: var(--ink-soft); }
+  .claude-result strong { color: var(--bassoon); font-weight: 600; }
+
+  /* Body content */
+  .approach-content { padding: 26px 28px; background: #fff; }
+  h3.sl { font-weight: 500; font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--vivace); display: flex; align-items: center; gap: 0.65rem; margin: 22px 0 10px; }
+  h3.sl::before { content: ''; width: 16px; height: 1px; background: var(--vivace); }
+  h3.sl:first-child { margin-top: 0; }
+  p { margin-bottom: 10px; }
+  ul,ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin: 5px 0; color: var(--ink-soft); }
+  li strong { color: var(--bassoon); }
+  pre { background: var(--bassoon); color: #d6cfc4; border: 1px solid rgba(35,26,17,.3); border-left: 3px solid var(--vivace); padding: 18px 20px; overflow-x: auto; font-size: 0.78rem; font-family: 'Cascadia Code','Fira Code','Consolas',monospace; margin: 12px 0; line-height: 1.6; }
+  code { background: rgba(35,26,17,.07); color: var(--baroque); padding: 1px 5px; font-size: 0.83em; font-family: 'Cascadia Code','Consolas',monospace; }
+  .proscons { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  .pros { background: var(--ok-light); border-left: 3px solid var(--ok); padding: 14px 16px; }
+  .cons { background: rgba(91,28,28,.06); border-left: 3px solid var(--baroque); padding: 14px 16px; }
+  .pros h4 { font-weight: 600; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ok); margin-bottom: 8px; }
+  .cons h4 { font-weight: 600; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--baroque); margin-bottom: 8px; }
+  .pros li::marker { color: var(--ok); }
+  .cons li::marker { color: var(--baroque); }
+  .infobox { background: rgba(186,224,246,.25); border-left: 3px solid var(--blue-danube); padding: 12px 16px; margin: 12px 0; font-size: 0.875rem; color: var(--ink-soft); }
+  .warnbox { background: rgba(179,79,61,.07); border-left: 3px solid var(--vivace); padding: 12px 16px; margin: 12px 0; font-size: 0.875rem; color: var(--ink-soft); }
+  .steps { counter-reset: step; padding-left: 0; list-style: none; }
+  .steps li { counter-increment: step; padding: 9px 0 9px 44px; position: relative; border-bottom: 1px solid var(--rule); font-size: 0.9rem; color: var(--ink-soft); }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before { content: counter(step); position: absolute; left: 0; top: 7px; width: 28px; height: 28px; background: var(--vivace); color: var(--ivory); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; }
+
+  /* Table */
+  .comp-wrap { overflow-x: auto; }
+  .comp-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 14px; }
+  .comp-table th { background: var(--bassoon); color: var(--ivory); padding: 10px 12px; text-align: left; font-weight: 600; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  .comp-table td { padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; font-size: 0.82rem; }
+  .comp-table tr:nth-child(even) td { background: rgba(35,26,17,.025); }
+  .comp-table tr:hover td { background: rgba(179,79,61,.05); }
+  .check  { color: var(--ok);      font-weight: 700; }
+  .cross  { color: var(--baroque); font-weight: 700; }
+  .partial{ color: var(--brass);   font-weight: 700; }
+
+  /* Decision */
+  .decision { background: var(--silenzio); border: 1px solid var(--rule); margin-bottom: 36px; overflow: hidden; }
+  .decision-header { background: var(--bassoon); padding: 18px 28px; }
+  .decision-header h2 { font-family: var(--ff-display); font-weight: 400; font-size: 1.1rem; color: var(--ivory); font-style: italic; }
+  .dnode { display: flex; align-items: stretch; border-bottom: 1px solid var(--rule); background: #fff; }
+  .dnode:nth-child(even) { background: rgba(35,26,17,.02); }
+  .dnode:last-child { border-bottom: none; }
+  .dq { background: rgba(35,26,17,.03); border-right: 1px solid var(--rule); padding: 14px 18px; font-weight: 500; font-size: 0.85rem; min-width: 260px; max-width: 260px; color: var(--bassoon); display: flex; align-items: center; }
+  .darrow { padding: 14px; color: var(--vivace); font-size: 1rem; flex-shrink: 0; display: flex; align-items: center; }
+  .dans { padding: 14px 10px; font-size: 0.85rem; color: var(--ink-soft); display: flex; align-items: center; }
+  .dans strong { color: var(--vivace); }
+
+  /* Recommend */
+  .recommend-box { background: var(--bassoon); padding: 36px; margin-bottom: 36px; color: var(--ivory); }
+  .recommend-box h2 { font-family: var(--ff-display); font-style: italic; font-weight: 300; font-size: clamp(1.6rem,3vw,2.2rem); letter-spacing: -0.02em; margin-bottom: 4px; }
+  .recommend-box h2 em { color: var(--vivace); }
+  .phase-title { font-weight: 500; font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--vivace); margin: 24px 0 10px; padding-top: 20px; border-top: 1px solid rgba(232,230,216,.12); display: flex; align-items: center; gap: 0.65rem; }
+  .phase-title::before { content: ''; width: 16px; height: 1px; background: var(--vivace); }
+  .recommend-box ul { opacity: 0.85; }
+  .recommend-box li { color: rgba(232,230,216,.8); }
+  .recommend-box code { background: rgba(232,230,216,.12); color: var(--ivory); }
+  .recommend-box .infobox { background: rgba(179,79,61,.15); border-left-color: var(--vivace); color: rgba(232,230,216,.9); margin-top: 20px; }
+
+  /* Footer */
+  .footer { background: var(--bassoon); padding: 28px 36px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-top: 3px solid var(--vivace); }
+  .footer-brand { font-family: var(--ff-display); font-style: italic; font-size: 1.1rem; color: var(--vivace); }
+  .footer-brand span { font-family: var(--ff-body); color: rgba(232,230,216,.45); font-size: 0.72rem; font-style: normal; letter-spacing: 0.12em; display: block; margin-top: 4px; }
+  .footer-meta { color: rgba(232,230,216,.38); font-size: 0.72rem; text-align: right; line-height: 1.7; }
+
+  @media (max-width: 640px) {
+    .proscons { grid-template-columns: 1fr; }
+    .approach-header, .approach-content, .fixes-panel, .claude-panel { padding: 16px 18px; }
+    .dq { min-width: 150px; max-width: 150px; font-size: 0.78rem; }
+    .hud__dept { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hud">
+  <div class="hud__mark">
+    <span class="hud__wordmark">AmaWaterways</span>
+    &nbsp;·&nbsp; River Year Platform
+  </div>
+  <div class="hud__dept">Crystal Reports Automation Reference</div>
+</header>
+
+<div class="page">
+
+<div class="hero">
+  <div class="hero-eyebrow">IT · Data Analytics Engineering</div>
+  <h1>Crystal Reports <em>Automation.</em></h1>
+  <p>A complete reference of every approach for automating edits, adding columns, changing SQL, and creating reports in SAP Crystal Reports 2016. Each approach includes whether Claude AI can be used as a prompt tool to do the work for you.</p>
+  <div class="meta">
+    <div class="meta-item"><strong>Author</strong><span>Venedicts Sapongay</span></div>
+    <div class="meta-item"><strong>Department</strong><span>IT · Data Analytics</span></div>
+    <div class="meta-item"><strong>Updated</strong><span>June 2026</span></div>
+    <div class="meta-item"><strong>CR Version</strong><span>2016 SP9 (v14.2.9.5104)</span></div>
+    <div class="meta-item"><strong>Data Source</strong><span>Snowflake / ODBC</span></div>
+  </div>
+</div>
+
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <div class="toc-grid">
+    <a href="#a1"><span class="toc-num">1</span> COM Automation (no install needed)</a>
+    <a href="#a2"><span class="toc-num">2</span> .NET Runtime (full create &amp; modify)</a>
+    <a href="#a3"><span class="toc-num">3</span> Power Automate Desktop (RPA)</a>
+    <a href="#a4"><span class="toc-num">4</span> SAP BusinessObjects REST API</a>
+    <a href="#a5"><span class="toc-num">5</span> Direct .rpt Binary Parsing (Python)</a>
+    <a href="#a6"><span class="toc-num">6</span> SSRS Migration</a>
+    <a href="#a7"><span class="toc-num">7</span> Power BI Migration</a>
+    <a href="#a8"><span class="toc-num">8</span> JasperReports (Open Source)</a>
+    <a href="#compare"><span class="toc-num" style="background:var(--brass)">≡</span> Comparison Matrix</a>
+    <a href="#decision"><span class="toc-num" style="background:var(--brass)">?</span> Decision Guide</a>
+    <a href="#recommend"><span class="toc-num" style="background:var(--brass)">★</span> Recommendation &amp; Roadmap</a>
+  </div>
+</div>
+
+<!-- ══ APPROACH 1 ══ -->
+<div class="approach" id="a1">
+  <div class="approach-header">
+    <div class="approach-number">1</div>
+    <div class="approach-title">
+      <h2>COM Automation — CrystalDesignRunTime</h2>
+      <div class="subtitle">Modify existing report objects via the built-in COM server. No extra software needed — works right now.</div>
+      <div class="badges">
+        <span class="badge badge-easy">Easy</span>
+        <span class="badge badge-free">Free</span>
+        <span class="badge badge-installed">Already installed</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="fixes-panel">
+    <h3>What This Approach Can Fix / Automate</h3>
+    <div class="fixes-grid">
+      <div class="fix-item"><div class="fix-icon">✏️</div><div class="fix-text"><strong>Rename a column header</strong>Change "Remarks" → "Notes", or any existing text label — no Designer needed</div></div>
+      <div class="fix-item"><div class="fix-icon">↔️</div><div class="fix-text"><strong>Reposition a column</strong>Move an existing header or field to a different Left/Top coordinate</div></div>
+      <div class="fix-item"><div class="fix-icon">📐</div><div class="fix-text"><strong>Resize an object</strong>Change Width and Height of any existing text or field object</div></div>
+      <div class="fix-item"><div class="fix-icon">🎨</div><div class="fix-text"><strong>Change font / bold / color</strong>Update font size, bold, or foreground color on existing objects</div></div>
+      <div class="fix-item"><div class="fix-icon">👁️</div><div class="fix-text"><strong>Show or hide a column</strong>Suppress or un-suppress any section or object</div></div>
+      <div class="fix-item"><div class="fix-icon">🗄️</div><div class="fix-text"><strong>Modify the SQL query</strong>Change CommandText SQL — add WHERE, JOIN, new columns on SQL Command-type reports</div></div>
+      <div class="fix-item"><div class="fix-icon">🔌</div><div class="fix-text"><strong>Change ODBC connection</strong>Swap the DSN or update stored credentials</div></div>
+      <div class="fix-item"><div class="fix-icon">📋</div><div class="fix-text"><strong>Audit report structure</strong>List all sections, objects, positions, and text labels</div></div>
+    </div>
+    <div class="warnbox" style="margin-top:12px;margin-bottom:0">⚠️ <strong>Hard limitation:</strong> COM can only modify objects that already exist. It cannot create new objects. Use Approach 2 for that.</div>
+  </div>
+
+  <div class="claude-panel">
+    <h3>Can Claude Be Used?</h3>
+    <span class="claude-status c-yes">✅ Yes — Claude can fully execute this approach</span>
+    <p class="claude-desc">You describe what you need in plain English. Claude inspects the report structure, identifies the exact object, writes the VBScript, and runs it using the COM server already installed on your machine. No manual scripting required.</p>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — rename a column header</div>
+      <div class="claude-prompt-text">In the report at C:\Crystal Reports Dev\Reports\Active\SBRR_MARKET_UPDATE.rpt, rename the column header labeled "Remarks" to "Notes" in PageHeaderSection1. Use COM automation (CrystalDesignRunTime). Save to the local working copy only — do not touch the network file.</div>
+    </div>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — change the SQL query</div>
+      <div class="claude-prompt-text">Update the SQL in SBRR_MARKET_UPDATE.rpt to add the MARKET column to the SELECT list. Show me the current SQL first before changing it. Use COM automation.</div>
+    </div>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — reposition a column</div>
+      <div class="claude-prompt-text">In SBRR_MARKET_UPDATE.rpt, move the "Cruise Code" column header 200 twips to the right using COM automation. Keep the same font and size.</div>
+    </div>
+    <div class="claude-result"><strong>What Claude does:</strong> Reads the report via COM → finds the section and object → inspects the current value → makes the change → saves the local file → confirms before/after. Claude will not touch the network file unless you explicitly say so.</div>
+  </div>
+
+  <div class="approach-content">
+    <h3 class="sl">What It Is</h3>
+    <p>Crystal Reports 2016 ships a 32-bit COM server (<code>CrystalDesignRunTime.Application</code>) driveable from VBScript or PowerShell. No extra installs — already on this machine.</p>
+    <h3 class="sl">Run Command</h3>
+<pre>%SystemRoot%\SysWOW64\cscript.exe //NoLogo "C:\Scripts\modify_report.vbs"</pre>
+    <h3 class="sl">Example — Rename a label &amp; change position</h3>
+<pre>Set app    = CreateObject("CrystalDesignRunTime.Application")
+Set report = app.OpenReport("C:\Reports\MyReport.rpt", 1)
+For s = 1 To report.Sections.Count
+    Set section = report.Sections.Item(CInt(s))
+    If InStr(section.Name, "PageHeader") > 0 Then
+        For o = 1 To section.ReportObjects.Count
+            Set obj = section.ReportObjects.Item(CInt(o))
+            Dim txt : txt = ""
+            On Error Resume Next : txt = obj.Text : On Error GoTo 0
+            If LCase(txt) = "remarks" Then
+                obj.Text = "Notes" : obj.Left = 58265 : obj.Top = 0
+            End If
+        Next
+    End If
+Next
+report.Save : WScript.Echo "Done."</pre>
+    <div class="proscons">
+      <div class="pros"><h4>✅ Pros</h4><ul><li>Zero extra software — works today</li><li>Reliable for renames, repositions, SQL edits</li><li>Simple VBScript — easy to maintain</li><li>Batch-process many .rpt files</li></ul></div>
+      <div class="cons"><h4>❌ Cons</h4><ul><li>Cannot create new objects — hard API limit</li><li>32-bit only — must use SysWOW64\cscript</li><li>Hangs if report is open in Designer during run</li><li>SQL editing only works on SQL Command-type sources</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPROACH 2 ══ -->
+<div class="approach" id="a2">
+  <div class="approach-header">
+    <div class="approach-number">2</div>
+    <div class="approach-title">
+      <h2>.NET Runtime — CrystalDecisions API</h2>
+      <div class="subtitle">Full create, modify, delete — any object type. One-time IT install, then fully automated forever.</div>
+      <div class="badges">
+        <span class="badge badge-medium">Intermediate</span>
+        <span class="badge badge-free">Free</span>
+        <span class="badge badge-rec">Recommended foundation</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="fixes-panel">
+    <h3>What This Approach Can Fix / Automate</h3>
+    <div class="fixes-grid">
+      <div class="fix-item"><div class="fix-icon">➕</div><div class="fix-text"><strong>Add a new column header</strong>Create a brand-new text label (e.g., "Market") in any section with exact position and font</div></div>
+      <div class="fix-item"><div class="fix-icon">📊</div><div class="fix-text"><strong>Add a new data field column</strong>Bind a new Snowflake column to a new field object in the Detail section</div></div>
+      <div class="fix-item"><div class="fix-icon">✏️</div><div class="fix-text"><strong>Rename any existing label</strong>Rename headers, labels, any text object</div></div>
+      <div class="fix-item"><div class="fix-icon">🗄️</div><div class="fix-text"><strong>Change the SQL data source</strong>Modify CommandText — add columns, change WHERE, update JOINs</div></div>
+      <div class="fix-item"><div class="fix-icon">⚗️</div><div class="fix-text"><strong>Create formula fields</strong>Add a @formula with an expression and place it on the report</div></div>
+      <div class="fix-item"><div class="fix-icon">📤</div><div class="fix-text"><strong>Export to PDF / Excel</strong>Run the report and export without opening Designer</div></div>
+      <div class="fix-item"><div class="fix-icon">📦</div><div class="fix-text"><strong>Bulk update many reports</strong>Loop through 50+ .rpt files and apply the same change to all</div></div>
+      <div class="fix-item"><div class="fix-icon">🎨</div><div class="fix-text"><strong>Format any object</strong>Set font, size, bold, color, borders, alignment on any object</div></div>
+    </div>
+  </div>
+
+  <div class="claude-panel">
+    <h3>Can Claude Be Used?</h3>
+    <span class="claude-status c-yes">✅ Yes — Claude can fully execute this approach</span>
+    <p class="claude-desc">Once the .NET runtime is installed, tell Claude what you need added, renamed, or modified. Claude writes and runs the PowerShell script against the CrystalDecisions API — including creating brand-new objects that Approach 1 cannot do. Claude handles all the technical detail; you just describe the business need.</p>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — add a new column header</div>
+      <div class="claude-prompt-text">Using the CrystalDecisions .NET API, add a new text label called "Market" to PageHeaderSection1 of C:\Crystal Reports Dev\Reports\Active\SBRR_MARKET_UPDATE.rpt. Position it immediately after the "Cruise Code" header. Match the same font (Arial 8pt bold) and height as the other column headers. Save to the local file only.</div>
+    </div>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — add a new data field column</div>
+      <div class="claude-prompt-text">In SBRR_MARKET_UPDATE.rpt, add a database field object for the MARKET column from Snowflake into DetailSection1. Place it directly under the "Market" header added to PageHeaderSection1. Match the width and height of the adjacent fields. Use the CrystalDecisions .NET API.</div>
+    </div>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — bulk rename across multiple reports</div>
+      <div class="claude-prompt-text">Using the CrystalDecisions .NET API, loop through all .rpt files in C:\Crystal Reports Dev\Reports\Active\ and rename any column header labeled "Remarks" to "Notes". List which files were changed and which had no "Remarks" label.</div>
+    </div>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — export to PDF</div>
+      <div class="claude-prompt-text">Open SBRR_MARKET_UPDATE.rpt using the CrystalDecisions .NET API, set the ODBC login (DSN: AMA_SNOWFLAKE_ODBC_CONNECTOR), run the report, and export to PDF at C:\Reports\Output\SBRR_today.pdf.</div>
+    </div>
+    <div class="claude-result"><strong>What Claude does:</strong> Loads the CrystalDecisions DLL → opens the report → inspects the section structure → calculates coordinates from existing object positions → generates and runs PowerShell → confirms what was added with exact positions.</div>
+  </div>
+
+  <div class="approach-content">
+    <h3 class="sl">Install Steps</h3>
+    <ul class="steps">
+      <li>Go to <strong>tools.sap.com</strong> → sign in (SAP ID: P2011371697)</li>
+      <li>Download: <strong>"SAP Crystal Reports for Visual Studio SP40 CR Runtime 64-bit MSI"</strong></li>
+      <li>Submit IT request to install on Citrix VD</li>
+      <li>Verify: <code>Get-ChildItem "C:\Program Files (x86)\SAP BusinessObjects" -Recurse -Filter "CrystalDecisions.CrystalReports.Engine.dll"</code></li>
+    </ul>
+    <h3 class="sl">Example — Add new "Market" column header</h3>
+<pre>Add-Type -Path "...\CrystalDecisions.CrystalReports.Engine.dll"
+$rpt = New-Object CrystalDecisions.CrystalReports.Engine.ReportDocument
+$rpt.Load("C:\Reports\SBRR_MARKET_UPDATE.rpt")
+
+$section = $rpt.ReportDefinition.Sections["PageHeaderSection1"]
+$txt = New-Object CrystalDecisions.CrystalReports.Engine.TextObject
+$txt.Text = "Market" ; $txt.Left = 58265 ; $txt.Top = 0
+$txt.Width = 1995    ; $txt.Height = 240
+$txt.Font.Name = "Arial" ; $txt.Font.Size = 8 ; $txt.Font.Bold = $true
+$section.ReportObjects.Add($txt)
+$rpt.SaveAs("C:\Reports\SBRR_MARKET_UPDATE.rpt") ; $rpt.Close()</pre>
+    <div class="proscons">
+      <div class="pros"><h4>✅ Pros</h4><ul><li>Creates new objects — no COM limitation</li><li>Works with 64-bit PowerShell</li><li>Free runtime license</li><li>Export to PDF/Excel/CSV built in</li></ul></div>
+      <div class="cons"><h4>❌ Cons</h4><ul><li>Requires IT install on Citrix VD</li><li>DLL paths must be correctly referenced</li><li>SP40 runtime vs CR 2016 SP9 — minor version gap</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPROACH 3 ══ -->
+<div class="approach" id="a3">
+  <div class="approach-header">
+    <div class="approach-number">3</div>
+    <div class="approach-title">
+      <h2>Power Automate Desktop (RPA)</h2>
+      <div class="subtitle">Record mouse/keyboard actions in the Crystal Reports Designer GUI and replay them. Free, already on Windows 11.</div>
+      <div class="badges">
+        <span class="badge badge-easy">Beginner</span>
+        <span class="badge badge-free">Free (Windows 11)</span>
+        <span class="badge badge-fragile">Fragile</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="fixes-panel">
+    <h3>What This Approach Can Fix / Automate</h3>
+    <div class="fixes-grid">
+      <div class="fix-item"><div class="fix-icon">🖱️</div><div class="fix-text"><strong>Automate any GUI action</strong>Anything you can do manually in Crystal Reports Designer can be recorded and replayed</div></div>
+      <div class="fix-item"><div class="fix-icon">📥</div><div class="fix-text"><strong>Insert new text objects</strong>Record Insert → Text Object → type → position — replay the same position every time</div></div>
+      <div class="fix-item"><div class="fix-icon">⏰</div><div class="fix-text"><strong>Schedule report runs</strong>Open a report, refresh data, export to PDF, send via email — on a timer</div></div>
+      <div class="fix-item"><div class="fix-icon">📤</div><div class="fix-text"><strong>Export reports automatically</strong>Automate File → Export → PDF every night</div></div>
+    </div>
+    <div class="warnbox" style="margin-top:12px;margin-bottom:0">⚠️ Breaks if window size, screen resolution, or zoom level changes. Not reliable on Citrix remote sessions.</div>
+  </div>
+
+  <div class="claude-panel">
+    <h3>Can Claude Be Used?</h3>
+    <span class="claude-status c-partial">⚠️ Partial — Claude assists but cannot execute GUI actions</span>
+    <p class="claude-desc">Claude cannot control the mouse, record clicks, or interact with the Crystal Reports Designer GUI. Power Automate Desktop requires a human to record the initial flow by performing the actions on screen. However, Claude can design the entire flow — writing out the exact steps to record, variables to create, and logic to add — so you follow Claude's instructions while recording.</p>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — design a flow (Claude plans, you record)</div>
+      <div class="claude-prompt-text">Help me design a Power Automate Desktop flow to insert a new text label "Market" into Crystal Reports PageHeaderSection1. Give me the exact step-by-step mouse clicks and keyboard actions I need to record, in the correct order, including where to click and what to type.</div>
+    </div>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — troubleshoot a broken flow</div>
+      <div class="claude-prompt-text">My Power Automate Desktop flow for Crystal Reports stopped working after I changed screen resolution from 1920x1080 to 1440x900. The flow clicks on the wrong place now. What are the best practices to make the flow resolution-independent?</div>
+    </div>
+    <div class="claude-result"><strong>What Claude does:</strong> Designs the flow steps, writes documentation, explains the logic, troubleshoots failures. <strong>What Claude cannot do:</strong> Record the flow, click the mouse, or interact with the Crystal Reports GUI. A person must perform the recording step.</div>
+  </div>
+
+  <div class="approach-content">
+    <h3 class="sl">How to Set Up</h3>
+    <ul class="steps">
+      <li>Search "Power Automate" in Windows Start — pre-installed on Windows 11</li>
+      <li>Click <strong>New flow</strong> → name it → click <strong>Record</strong></li>
+      <li>Perform the action in Crystal Reports — every click and keypress is captured</li>
+      <li>Stop recording → review the generated steps</li>
+      <li>Add input variables (report path, column name) to parameterize the flow</li>
+      <li>Run or schedule the flow on demand</li>
+    </ul>
+    <div class="proscons">
+      <div class="pros"><h4>✅ Pros</h4><ul><li>Already available — no IT install needed</li><li>No programming required</li><li>Can trigger from Teams or Power Automate cloud</li></ul></div>
+      <div class="cons"><h4>❌ Cons</h4><ul><li>Breaks when screen resolution or window changes</li><li>Hard to parameterize for different column positions</li><li>Screen must be visible and unlocked during run</li><li>Not reliable on Citrix remote sessions</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPROACH 4 ══ -->
+<div class="approach" id="a4">
+  <div class="approach-header">
+    <div class="approach-number">4</div>
+    <div class="approach-title">
+      <h2>SAP BusinessObjects REST API</h2>
+      <div class="subtitle">Manage reports through the BOE platform — schedule, refresh, export. Cannot edit report design or layout.</div>
+      <div class="badges">
+        <span class="badge badge-medium">Intermediate</span>
+        <span class="badge badge-paid">Requires BOE license</span>
+        <span class="badge badge-migration">Limited scope</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="fixes-panel">
+    <h3>What This Approach Can Fix / Automate</h3>
+    <div class="fixes-grid">
+      <div class="fix-item"><div class="fix-icon">⏰</div><div class="fix-text"><strong>Schedule report runs</strong>Trigger reports at specific times via API call — no manual scheduling in BOE</div></div>
+      <div class="fix-item"><div class="fix-icon">📤</div><div class="fix-text"><strong>Export report output</strong>Programmatically export to PDF, Excel, CSV and save to a network share</div></div>
+      <div class="fix-item"><div class="fix-icon">🔄</div><div class="fix-text"><strong>Refresh data on demand</strong>Trigger a data refresh after a nightly Snowflake load</div></div>
+      <div class="fix-item"><div class="fix-icon">📧</div><div class="fix-text"><strong>Auto-distribute reports</strong>Email report outputs to a distribution list after each run</div></div>
+    </div>
+    <div class="warnbox" style="margin-top:12px;margin-bottom:0">⚠️ The BOE REST API manages report execution only. It cannot add columns, rename labels, or change SQL.</div>
+  </div>
+
+  <div class="claude-panel">
+    <h3>Can Claude Be Used?</h3>
+    <span class="claude-status c-partial">⚠️ Partial — Claude writes API scripts but the API cannot change report layout</span>
+    <p class="claude-desc">Claude can write the complete PowerShell or HTTP scripts to authenticate, schedule, export, and distribute via the BOE REST API. However, the BOE API itself has no method to modify report layout — adding columns, renaming labels, or changing SQL is not possible through this API regardless of what Claude writes.</p>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — schedule and export via BOE API</div>
+      <div class="claude-prompt-text">Write a PowerShell script to use the SAP BusinessObjects REST API to authenticate to BOE at http://boe-server:6405, find the report named "SBRR Booking Revenue Report", schedule it to run every weekday at 6:00 AM, and export the PDF output to \\internal\reports\Output\SBRR_daily.pdf.</div>
+    </div>
+    <div class="claude-result"><strong>What Claude does:</strong> Writes complete REST API scripts for scheduling and export. <strong>What Claude cannot do via this approach:</strong> Add columns, rename labels, or change SQL — the BOE API has no endpoints for report design changes. Use Approaches 1 or 2 for those.</div>
+  </div>
+
+  <div class="approach-content">
+    <h3 class="sl">Example — Schedule and export</h3>
+<pre>$token = (Invoke-RestMethod -Uri "http://boe-server:6405/biprws/logon/long" `
+  -Method Post -ContentType "application/json" `
+  -Body '{"userName":"admin","password":"pass","auth":"secEnterprise"}').logonToken
+
+Invoke-RestMethod `
+  -Uri "http://boe-server:6405/biprws/infostore/{reportId}/schedules" `
+  -Method Post `
+  -Headers @{ "X-SAP-LogonToken" = $token } `
+  -Body (@{ schedule = @{ recurrence = "once" } } | ConvertTo-Json)</pre>
+    <div class="proscons">
+      <div class="pros"><h4>✅ Pros</h4><ul><li>True REST API — integrates with any system</li><li>Automates scheduling and distribution</li><li>No local Crystal Reports install needed on server</li></ul></div>
+      <div class="cons"><h4>❌ Cons</h4><ul><li>Cannot edit report design or add columns</li><li>Requires SAP BOE platform (separate licensed product)</li><li>Unknown if BOE is deployed in AmaWaterways environment</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPROACH 5 ══ -->
+<div class="approach" id="a5">
+  <div class="approach-header">
+    <div class="approach-number">5</div>
+    <div class="approach-title">
+      <h2>Direct .rpt Binary Parsing (Python)</h2>
+      <div class="subtitle">Parse the .rpt OLE2 compound document directly — no Crystal Reports software required on the machine.</div>
+      <div class="badges">
+        <span class="badge badge-hard">Expert</span>
+        <span class="badge badge-free">Free</span>
+        <span class="badge badge-migration">Not production-ready</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="fixes-panel">
+    <h3>What This Approach Can Fix / Automate</h3>
+    <div class="fixes-grid">
+      <div class="fix-item"><div class="fix-icon">🔍</div><div class="fix-text"><strong>Read report metadata</strong>Extract structure, object names, and positions without Crystal Reports installed</div></div>
+      <div class="fix-item"><div class="fix-icon">🔬</div><div class="fix-text"><strong>Research / reverse engineering</strong>Understand the binary .rpt format to eventually build a write-capable parser</div></div>
+    </div>
+    <div class="warnbox" style="margin-top:12px;margin-bottom:0">⚠️ No mature Python library exists for reliably writing .rpt files. Risk of corrupting reports if write is attempted.</div>
+  </div>
+
+  <div class="claude-panel">
+    <h3>Can Claude Be Used?</h3>
+    <span class="claude-status c-no">❌ Claude cannot add or modify columns via this approach</span>
+    <p class="claude-desc">Claude can write Python to <em>read</em> .rpt binary data using the <code>olefile</code> library (useful for auditing without Crystal Reports installed). However, no Python library exists to reliably <em>write</em> to the .rpt binary format — attempting to do so risks permanently corrupting the report file. Claude cannot use this approach to add columns, rename labels, or change SQL. Use Approaches 1 or 2 for modifications.</p>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — read-only audit (only thing Claude CAN do here)</div>
+      <div class="claude-prompt-text">Write a Python script using the olefile library to open C:\Crystal Reports Dev\Reports\Active\SBRR_MARKET_UPDATE.rpt and list all internal OLE2 streams, then extract any readable text strings (object labels, SQL fragments). Also show me how to install Python and the olefile library on Windows.</div>
+    </div>
+    <div class="claude-result"><strong>What Claude does:</strong> Writes the Python read-only parsing script. <strong>What Claude cannot do via this approach:</strong> Add columns, rename labels, or change SQL — no write library exists for .rpt binary format. For modifications, use Approach 1 or 2.</div>
+  </div>
+
+  <div class="approach-content">
+    <h3 class="sl">Example — Read raw .rpt structure</h3>
+<pre>import olefile  # pip install olefile
+
+with olefile.OleFileIO("MyReport.rpt") as ole:
+    for entry in ole.listdir():
+        print(entry)
+    if ole.exists("CRYSETIN"):
+        data = ole.openstream("CRYSETIN").read()
+        print(f"Stream size: {len(data)} bytes")</pre>
+    <div class="proscons">
+      <div class="pros"><h4>✅ Pros</h4><ul><li>No Crystal Reports software needed</li><li>Cross-platform — could run in cloud/Linux</li></ul></div>
+      <div class="cons"><h4>❌ Cons</h4><ul><li>No working write library exists</li><li>Binary format is proprietary and undocumented</li><li>High risk of corrupting .rpt files if write attempted</li><li>Python not installed on this machine</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPROACH 6 ══ -->
+<div class="approach" id="a6">
+  <div class="approach-header">
+    <div class="approach-number">6</div>
+    <div class="approach-title">
+      <h2>SSRS — SQL Server Reporting Services</h2>
+      <div class="subtitle">Replace Crystal Reports with Microsoft's reporting platform. Reports are XML (RDL) — fully scriptable by AI or code.</div>
+      <div class="badges">
+        <span class="badge badge-hard">Large migration</span>
+        <span class="badge badge-freemium">Included w/ SQL Server</span>
+        <span class="badge badge-migration">Long-term project</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="fixes-panel">
+    <h3>What This Approach Can Fix / Automate (after migration)</h3>
+    <div class="fixes-grid">
+      <div class="fix-item"><div class="fix-icon">➕</div><div class="fix-text"><strong>Add columns by editing XML</strong>Adding a column is inserting XML nodes — Claude can do this instantly</div></div>
+      <div class="fix-item"><div class="fix-icon">✏️</div><div class="fix-text"><strong>Rename any label</strong>Find-and-replace in RDL XML — batch-update all reports at once</div></div>
+      <div class="fix-item"><div class="fix-icon">🗄️</div><div class="fix-text"><strong>Change SQL directly</strong>SQL queries are plain text inside the XML — easy to find and edit</div></div>
+      <div class="fix-item"><div class="fix-icon">🌐</div><div class="fix-text"><strong>Web-based delivery</strong>Users view in browser — no Crystal Reports license for viewers</div></div>
+      <div class="fix-item"><div class="fix-icon">📦</div><div class="fix-text"><strong>Version control in Git</strong>RDL files are XML — stored in Git and diff'd like source code</div></div>
+    </div>
+  </div>
+
+  <div class="claude-panel">
+    <h3>Can Claude Be Used?</h3>
+    <span class="claude-status c-yes">✅ Yes — Claude can fully modify SSRS RDL files (easiest AI integration)</span>
+    <p class="claude-desc">Because SSRS reports are plain XML (.rdl files), Claude reads, modifies, and writes them directly — no special software or COM/DLL needed. Adding a column, renaming a label, changing SQL — all pure XML text. This is the approach where Claude has the fewest limitations. After migration, every report change request becomes a simple prompt.</p>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — add a column to an RDL file</div>
+      <div class="claude-prompt-text">Open the SSRS report at C:\Reports\SSRS\SBRR.rdl and add a "Market" column after "CruiseCode". The header should be bold. The data cell should bind to the MARKET field from the dataset. Match the width of the CruiseCode column. Save the file.</div>
+    </div>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — batch rename across all RDL files</div>
+      <div class="claude-prompt-text">Loop through all .rdl files in C:\Reports\SSRS\ and rename any column header text "Remarks" to "Notes". List which files were changed.</div>
+    </div>
+    <div class="claude-result"><strong>What Claude does:</strong> Reads the RDL XML → finds the relevant nodes → inserts or modifies the XML → saves the file. No DLL, no COM, no software required — pure text editing.</div>
+  </div>
+
+  <div class="approach-content">
+    <h3 class="sl">Adding a column via PowerShell (XML)</h3>
+<pre>[xml]$rdl = Get-Content "C:\Reports\SBRR.rdl"
+$ns = "http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition"
+$newCell = $rdl.CreateElement("TablixCell", $ns)
+$newCell.InnerXml = @"
+  &lt;CellContents xmlns='$ns'&gt;
+    &lt;Textbox Name='txtMarket'&gt;
+      &lt;Value&gt;Market&lt;/Value&gt;
+      &lt;Style&gt;&lt;FontWeight&gt;Bold&lt;/FontWeight&gt;&lt;/Style&gt;
+    &lt;/Textbox&gt;
+  &lt;/CellContents&gt;
+"@
+$rdl.Save("C:\Reports\SBRR.rdl")</pre>
+    <div class="proscons">
+      <div class="pros"><h4>✅ Pros</h4><ul><li>Reports are XML — trivially scriptable by Claude</li><li>Web viewer — no desktop software for end users</li><li>Included with SQL Server</li><li>Version control via Git</li></ul></div>
+      <div class="cons"><h4>❌ Cons</h4><ul><li>All existing Crystal Reports must be rebuilt in SSRS</li><li>Fewer pixel-perfect formatting options</li><li>Requires SQL Server instance or Azure SQL</li><li>6–18 month migration project</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPROACH 7 ══ -->
+<div class="approach" id="a7">
+  <div class="approach-header">
+    <div class="approach-number">7</div>
+    <div class="approach-title">
+      <h2>Power BI Migration</h2>
+      <div class="subtitle">Modern cloud-native reporting with native Snowflake connector, AI Copilot, and full REST API. Best long-term replacement.</div>
+      <div class="badges">
+        <span class="badge badge-easy">Easy for new reports</span>
+        <span class="badge badge-paid">$10/user/mo Pro</span>
+        <span class="badge badge-migration">Long-term project</span>
+        <span class="badge badge-rec">Best long-term option</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="fixes-panel">
+    <h3>What This Approach Can Fix / Automate (after migration)</h3>
+    <div class="fixes-grid">
+      <div class="fix-item"><div class="fix-icon">🤖</div><div class="fix-text"><strong>AI Copilot for column additions</strong>Type "Add a Market column" — Copilot builds the visual and data binding automatically</div></div>
+      <div class="fix-item"><div class="fix-icon">🔌</div><div class="fix-text"><strong>Native Snowflake connection</strong>No ODBC DSN needed — built-in Snowflake connector</div></div>
+      <div class="fix-item"><div class="fix-icon">🗄️</div><div class="fix-text"><strong>Modify SQL in Power Query</strong>Editable in Power Query editor — add columns, filters, joins</div></div>
+      <div class="fix-item"><div class="fix-icon">🌐</div><div class="fix-text"><strong>Browser-based</strong>No Crystal Reports license for viewers</div></div>
+      <div class="fix-item"><div class="fix-icon">🔄</div><div class="fix-text"><strong>Automatic data refresh</strong>Schedule daily/hourly refresh from Snowflake</div></div>
+      <div class="fix-item"><div class="fix-icon">🤝</div><div class="fix-text"><strong>Teams integration</strong>Embed live reports directly in Microsoft Teams channels</div></div>
+      <div class="fix-item"><div class="fix-icon">⚙️</div><div class="fix-text"><strong>REST API for automation</strong>Push datasets, trigger refreshes, manage permissions programmatically</div></div>
+    </div>
+  </div>
+
+  <div class="claude-panel">
+    <h3>Can Claude Be Used?</h3>
+    <span class="claude-status c-yes">✅ Yes — Claude writes all Power Query M, DAX, and REST API code</span>
+    <p class="claude-desc">Claude can write Power Query M code (add/transform columns from Snowflake), DAX measures (calculated metrics), and Power BI REST API scripts (trigger refreshes, push data, manage permissions). Claude cannot open the Power BI Desktop app or the browser-based Power BI Service directly, but it writes all the code — you paste it in or run the script.</p>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — add a column in Power Query M</div>
+      <div class="claude-prompt-text">Write the Power Query M code to connect to our Snowflake instance (amawaterways.snowflakecomputing.com, warehouse AMA_WAREHOUSE, database AMA_DB, schema REPORTING) and load the BOOKINGS_REVENUE table. Add a calculated column "Net Revenue per Guest" = [GROSS_REVENUE] / [GUEST_COUNT]. Show me where to paste this in Power BI Desktop.</div>
+    </div>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — trigger dataset refresh via REST API</div>
+      <div class="claude-prompt-text">Write a PowerShell script using the Power BI REST API to trigger a manual dataset refresh for the "SBRR Bookings Revenue" dataset in the "IT Reports" workspace. Use a service principal for authentication (tenant ID, client ID, client secret from environment variables). This should run automatically after each nightly Snowflake data load.</div>
+    </div>
+    <div class="claude-result"><strong>What Claude does:</strong> Writes complete Power Query M, DAX, and REST API code — copy-paste ready. <strong>What Claude cannot do:</strong> Directly open Power BI Desktop or the Power BI Service UI. You paste Claude's code into Power BI, or run the PowerShell REST API script.</div>
+  </div>
+
+  <div class="approach-content">
+    <h3 class="sl">Snowflake connection in Power Query</h3>
+<pre>let
+    Source = Snowflake.Databases(
+        "amawaterways.snowflakecomputing.com",
+        "AMA_WAREHOUSE"
+    ),
+    DB     = Source{[Name="AMA_DB"]}[Data],
+    Schema = DB{[Name="REPORTING"]}[Data],
+    Table  = Schema{[Name="BOOKINGS_REVENUE"]}[Data]
+in
+    Table</pre>
+    <div class="proscons">
+      <div class="pros"><h4>✅ Pros</h4><ul><li>Native Snowflake connector — no ODBC config</li><li>AI Copilot built in</li><li>Web-based — end users need no software</li><li>REST API for full programmatic automation</li><li>Teams integration, automatic refresh</li></ul></div>
+      <div class="cons"><h4>❌ Cons</h4><ul><li>$10/user/month for Pro license</li><li>All existing Crystal Reports must be rebuilt</li><li>Less suited for pixel-perfect print reports</li><li>6–12 month migration project</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPROACH 8 ══ -->
+<div class="approach" id="a8">
+  <div class="approach-header">
+    <div class="approach-number">8</div>
+    <div class="approach-title">
+      <h2>JasperReports — Open Source Java Engine</h2>
+      <div class="subtitle">Replace Crystal Reports with a fully open-source reporting engine. Reports are JRXML (XML) — fully programmable.</div>
+      <div class="badges">
+        <span class="badge badge-hard">Advanced</span>
+        <span class="badge badge-free">Free (Community)</span>
+        <span class="badge badge-migration">Long-term project</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="fixes-panel">
+    <h3>What This Approach Can Fix / Automate (after migration)</h3>
+    <div class="fixes-grid">
+      <div class="fix-item"><div class="fix-icon">➕</div><div class="fix-text"><strong>Add columns by editing JRXML</strong>Reports are XML — adding a column is inserting a few XML elements, scriptable by Claude</div></div>
+      <div class="fix-item"><div class="fix-icon">✏️</div><div class="fix-text"><strong>Rename any label</strong>Find-and-replace in XML — instant across all reports</div></div>
+      <div class="fix-item"><div class="fix-icon">🗄️</div><div class="fix-text"><strong>Modify SQL data source</strong>SQL queries are plain text inside JRXML</div></div>
+      <div class="fix-item"><div class="fix-icon">🖨️</div><div class="fix-text"><strong>Pixel-perfect print formatting</strong>Produces print-quality output like Crystal Reports</div></div>
+      <div class="fix-item"><div class="fix-icon">⚙️</div><div class="fix-text"><strong>REST API via JasperReports Server</strong>Run, schedule, and export reports via HTTP</div></div>
+      <div class="fix-item"><div class="fix-icon">💰</div><div class="fix-text"><strong>Zero license cost</strong>Community edition is completely free</div></div>
+    </div>
+  </div>
+
+  <div class="claude-panel">
+    <h3>Can Claude Be Used?</h3>
+    <span class="claude-status c-yes">✅ Yes — Claude can fully modify JRXML files (same as SSRS — pure XML)</span>
+    <p class="claude-desc">Just like SSRS, JasperReports uses XML (.jrxml). Claude reads, modifies, and writes JRXML files directly — no Java, no Jasper Studio required. Adding columns, renaming labels, changing SQL — all pure XML that Claude handles natively. After migration, any report change is a simple prompt.</p>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — add a column to a JRXML file</div>
+      <div class="claude-prompt-text">Open C:\Reports\Jasper\SBRR.jrxml and add a "Market" column after "CruiseCode". Header text should be bold Arial 8pt. The data cell should bind to $F{MARKET}. Match the width of the CruiseCode column. Save the file.</div>
+    </div>
+    <div class="claude-prompt-wrap">
+      <div class="claude-prompt-label">Sample prompt — generate a new JRXML report from scratch</div>
+      <div class="claude-prompt-text">Create a new JasperReports JRXML file for a "SW2 Sailings Summary" report with columns: Sailing Code, Guest Count, Gross Revenue, Market. The Snowflake data source is amawaterways.snowflakecomputing.com. Include a page header with the title and page footer with the page number. Save to C:\Reports\Jasper\SW2_Summary.jrxml.</div>
+    </div>
+    <div class="claude-result"><strong>What Claude does:</strong> Reads the JRXML → modifies the XML → adds staticText (header) and textField (data) elements → updates the SQL queryString → saves the file. No Jasper Studio, no Java compilation needed.</div>
+  </div>
+
+  <div class="approach-content">
+    <h3 class="sl">Adding a column in JRXML</h3>
+<pre>&lt;textField&gt;
+  &lt;reportElement x="580" y="0" width="100" height="20"/&gt;
+  &lt;textElement&gt;&lt;font fontName="Arial" size="8" isBold="true"/&gt;&lt;/textElement&gt;
+  &lt;textFieldExpression&gt;&lt;![CDATA[$F{MARKET}]]&gt;&lt;/textFieldExpression&gt;
+&lt;/textField&gt;</pre>
+    <div class="proscons">
+      <div class="pros"><h4>✅ Pros</h4><ul><li>Completely free and open source</li><li>JRXML is XML — Claude can modify natively</li><li>Pixel-perfect output like Crystal Reports</li><li>Runs on any OS, no per-user license</li></ul></div>
+      <div class="cons"><h4>❌ Cons</h4><ul><li>Java knowledge required for server setup</li><li>All Crystal Reports must be rebuilt</li><li>Smaller Microsoft ecosystem integration</li><li>12–24 month migration project</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COMPARISON MATRIX ══ -->
+<div class="approach" id="compare">
+  <div class="approach-header">
+    <div class="approach-number" style="color:var(--brass)">≡</div>
+    <div class="approach-title">
+      <h2>Comparison Matrix</h2>
+      <div class="subtitle">All eight approaches — including Claude capability for each.</div>
+    </div>
+  </div>
+  <div class="approach-content">
+    <div class="comp-wrap">
+    <table class="comp-table">
+      <thead>
+        <tr><th>#</th><th>Approach</th><th>Add new column</th><th>Rename label</th><th>Change SQL</th><th>No extra install</th><th>Claude can execute?</th><th>Cost</th><th>Ready when?</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td><strong>COM (VBS)</strong></td><td><span class="cross">✗</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓ Full</span></td><td>Free</td><td>Now</td></tr>
+        <tr><td>2</td><td><strong>.NET Runtime</strong></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="cross">✗</span></td><td><span class="check">✓ Full</span></td><td>Free</td><td>After IT install</td></tr>
+        <tr><td>3</td><td><strong>Power Automate</strong></td><td><span class="partial">~</span></td><td><span class="partial">~</span></td><td><span class="cross">✗</span></td><td><span class="check">✓</span></td><td><span class="partial">~ Assists only</span></td><td>Free</td><td>Now (fragile)</td></tr>
+        <tr><td>4</td><td><strong>BOE REST API</strong></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="partial">~ Scripts only</span></td><td>BOE license</td><td>If BOE deployed</td></tr>
+        <tr><td>5</td><td><strong>Python binary</strong></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗ Cannot modify</span></td><td>Free</td><td>Not ready</td></tr>
+        <tr><td>6</td><td><strong>SSRS</strong></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="partial">~</span></td><td><span class="check">✓ Full (XML)</span></td><td>SQL Server lic.</td><td>6–18 months</td></tr>
+        <tr><td>7</td><td><strong>Power BI</strong></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓ browser</span></td><td><span class="check">✓ Code only</span></td><td>$10/user/mo</td><td>6–12 months</td></tr>
+        <tr><td>8</td><td><strong>JasperReports</strong></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="cross">✗</span></td><td><span class="check">✓ Full (XML)</span></td><td>Free</td><td>12–24 months</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:20px;flex-wrap:wrap;font-size:.78rem;color:var(--allegretto)">
+      <span><span class="check">✓</span> Yes</span>
+      <span><span class="cross">✗</span> No</span>
+      <span><span class="partial">~</span> Partial</span>
+      <span style="color:var(--claude)">Claude Full = writes &amp; runs end-to-end</span>
+      <span style="color:var(--brass)">Claude Code only = writes code, you paste/run it</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DECISION GUIDE ══ -->
+<div class="decision" id="decision">
+  <div class="decision-header"><h2>Which approach for which situation?</h2></div>
+  <div>
+    <div class="dnode"><div class="dq">Rename an existing column label or move it?</div><div class="darrow">→</div><div class="dans"><strong>Approach 1 (COM)</strong> — works today, Claude can execute in full</div></div>
+    <div class="dnode"><div class="dq">Change the SQL query (add column, add WHERE)?</div><div class="darrow">→</div><div class="dans"><strong>Approach 1 (COM)</strong> — Claude can do this now with a plain-English prompt</div></div>
+    <div class="dnode"><div class="dq">Add a brand new column header or data field?</div><div class="darrow">→</div><div class="dans"><strong>Approach 2 (.NET Runtime)</strong> — Claude executes after one-time IT install</div></div>
+    <div class="dnode"><div class="dq">Need something right now, zero installs?</div><div class="darrow">→</div><div class="dans"><strong>Approach 3 (Power Automate)</strong> — Claude designs the flow, you record it</div></div>
+    <div class="dnode"><div class="dq">Automate report scheduling and email distribution?</div><div class="darrow">→</div><div class="dans"><strong>Approach 4 (BOE REST API)</strong> if BOE exists — Claude writes the API scripts</div></div>
+    <div class="dnode"><div class="dq">Starting a brand-new report (not converting)?</div><div class="darrow">→</div><div class="dans"><strong>Approach 7 (Power BI)</strong> — Claude writes M/DAX code; native Snowflake connector</div></div>
+    <div class="dnode"><div class="dq">Long-term: replace Crystal Reports entirely?</div><div class="darrow">→</div><div class="dans"><strong>Approach 7 (Power BI)</strong> for analytics; <strong>Approach 6 (SSRS)</strong> for pixel-perfect print. Both fully Claude-executable via XML/code.</div></div>
+  </div>
+</div>
+
+<!-- ══ RECOMMENDATION ══ -->
+<div class="recommend-box" id="recommend">
+  <h2>Recommendation &amp; <em>Roadmap</em></h2>
+  <p style="color:rgba(232,230,216,.6);font-size:.875rem;margin-top:6px">AmaWaterways IT · Data Analytics Engineering</p>
+
+  <div class="phase-title">Phase 1 — Now (No install required)</div>
+  <ul>
+    <li>Use <strong>Approach 1 (COM/VBS)</strong> via Claude for label renames, repositioning, SQL changes on existing reports</li>
+    <li>Prompt Claude in plain English — Claude writes and runs the VBScript automatically</li>
+    <li>Document all pending change requests for batch processing after Phase 2</li>
+  </ul>
+
+  <div class="phase-title">Phase 2 — Short term (After IT installs CR for VS Runtime)</div>
+  <ul>
+    <li>Use <strong>Approach 2 (.NET Runtime)</strong> as the execution engine — Claude handles all scripting</li>
+    <li>Claude can then add brand-new column headers, data fields, and formula fields on request</li>
+    <li>First test: SBRR Market column addition (header + SQL + data field) via a single Claude prompt</li>
+  </ul>
+
+  <div class="phase-title">Phase 3 — Medium term (Claude as team tool)</div>
+  <ul>
+    <li>Formalise Claude as the team's automation tool — any member submits a plain-English change request to Claude</li>
+    <li>Claude saves to a local copy first → team reviews → manual deploy to <code>\\internal\reports\</code></li>
+    <li>Build a library of standard prompts for common tasks (rename, add column, change SQL, export PDF)</li>
+  </ul>
+
+  <div class="phase-title">Phase 4 — Long term (Strategic modernisation)</div>
+  <ul>
+    <li>New reports → <strong>Power BI</strong> — Claude writes the Power Query M and DAX code</li>
+    <li>Pixel-perfect print reports → <strong>SSRS</strong> — Claude edits RDL XML files directly</li>
+    <li>Existing Crystal Reports → maintained via Approaches 1–2 until natural retirement</li>
+  </ul>
+
+  <div class="infobox">
+    📋 <strong>Immediate next step:</strong> Wait for IT to approve and install the SAP Crystal Reports for Visual Studio SP40 CR Runtime 64-bit MSI on the Citrix VD. Once installed, the SBRR Market column addition takes one Claude prompt and ~30 seconds of script execution — and every future column request follows the same pattern.
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-brand">AmaWaterways<span>IT · Data Analytics Engineering · Internal Reference · June 2026</span></div>
+  <div class="footer-meta">Crystal Reports Automation Reference<br>CR 2016 SP9 · Snowflake/ODBC<br>Prepared with Claude Code (Anthropic AI)</div>
+</div>
+
+</div>
+</body>
+</html>
